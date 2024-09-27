@@ -1,0 +1,3 @@
+[submodule "vendor/esp-idf-lib"]
+	path = vendor/esp-idf-lib
+	url = https://github.com/UncleRus/esp-idf-lib.git

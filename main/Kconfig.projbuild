@@ -1,0 +1,299 @@
+menu "XIAO Sensor Configuration"
+
+    menu "Wi-Fi Configuration"
+        config ESP_WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID (network name) for the sensor to connect to.
+
+        config ESP_WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password (WPA or WPA2) for the sensor to use.
+
+        choice ESP_WIFI_SAE_MODE
+            prompt "WPA3 SAE mode selection"
+            default ESP_WPA3_SAE_PWE_BOTH
+            help
+                Select mode for SAE as Hunt and Peck, H2E or both.
+            config ESP_WPA3_SAE_PWE_HUNT_AND_PECK
+                bool "HUNT AND PECK"
+            config ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT
+                bool "H2E"
+            config ESP_WPA3_SAE_PWE_BOTH
+                bool "BOTH"
+        endchoice
+
+        config ESP_WIFI_PW_ID
+            string "PASSWORD IDENTIFIER"
+            depends on  ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT || ESP_WPA3_SAE_PWE_BOTH
+            default ""
+            help
+                password identifier for SAE H2E
+
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the maximum retry to avoid the station reconnecting to the AP indefinitely when the AP is nonexistent.
+
+        choice ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD
+            prompt "WiFi Scan auth mode threshold"
+            default ESP_WIFI_AUTH_WPA2_PSK
+            help
+                The weakest auth mode to accept in scan mode.
+                Defaults to ESP_WIFI_AUTH_WPA2_PSK if a password is present and ESP_WIFI_AUTH_OPEN is used.
+                Select ESP_WIFI_AUTH_WEP/ESP_WIFI_AUTH_WPA_PSK if the AP is operating in WEP/WPA mode.
+
+            config ESP_WIFI_AUTH_OPEN
+                bool "OPEN"
+            config ESP_WIFI_AUTH_WEP
+                bool "WEP"
+            config ESP_WIFI_AUTH_WPA_PSK
+                bool "WPA PSK"
+            config ESP_WIFI_AUTH_WPA2_PSK
+                bool "WPA2 PSK"
+            config ESP_WIFI_AUTH_WPA_WPA2_PSK
+                bool "WPA/WPA2 PSK"
+            config ESP_WIFI_AUTH_WPA3_PSK
+                bool "WPA3 PSK"
+            config ESP_WIFI_AUTH_WPA2_WPA3_PSK
+                bool "WPA2/WPA3 PSK"
+            config ESP_WIFI_AUTH_WAPI_PSK
+                bool "WAPI PSK"
+        endchoice
+
+        config ESP_WIFI_COUNTRY_CODE
+            string "WiFi Country Code"
+            default "01"
+            help
+                Configure the country code for WiFi operations.
+
+                This setting is used by the `esp_wifi_set_country_code` function to define regional WiFi parameters.
+
+                - **Default**: "01" (World Safe Mode)
+                - **Supported Codes**: "01", "AT", "AU", "BE", "BG", "BR", "CA", "CH", "CN", "CY", "CZ",
+                  "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HK", "HR", "HU", "IE", "IN",
+                  "IS", "IT", "JP", "KR", "LI", "LT", "LU", "LV", "MT", "MX", "NL", "NO",
+                  "NZ", "PL", "PT", "RO", "SE", "SI", "SK", "TW", "US"
+
+                **Behavior:**
+                - **ieee80211d_enabled**:
+                  1. **Enabled**:
+                     - The country info of the connected AP is used.
+                     - If disconnected, it reverts to the configured country code.
+                  2. **Disabled**:
+                     - The configured country code is always used.
+                - The country configuration is stored in flash memory.
+                - Changing the country info updates the SoftAP's country IE in probe responses/beacons.
+                - PHY initialization data switches based on the country info.
+
+                **Notes:**
+                - Setting to "01" (World Safe Mode) disables the country IE in SoftAP mode.
+                - The third character of the country code string must be one of the following: ' ', 'O', 'I', 'X'. Otherwise, it defaults to ' '.
+
+        config ESP_WIFI_ANTENNA
+            choice "WiFi Antenna Selection"
+            prompt "WiFi Antenna"
+            default WIFI_ANTENNA_BUILT_IN
+            help
+                Select which antenna to use for WiFi operations.
+
+            config WIFI_ANTENNA_BUILT_IN
+                bool "Built-in Antenna"
+                help
+                    Use the device's built-in antenna for WiFi connectivity.
+
+            config WIFI_ANTENNA_EXTERNAL
+                bool "External Antenna"
+                help
+                    Use an external antenna for WiFi connectivity.
+        endchoice
+    endmenu
+
+    menu "MQTT Configuration"
+        config MQTT_BROKER_URI
+            string "MQTT Broker URI"
+            default "mqtt://192.168.1.100"
+            help
+                URI of the MQTT broker to connect to.
+
+        config MQTT_BROKER_PORT
+            int "MQTT Broker Port"
+            default 1883
+            help
+                Port number of the MQTT broker.
+
+        config MQTT_TOPIC
+            string "MQTT Topic"
+            default "xiao/sensor"
+            help
+                MQTT topic for publishing sensor data.
+
+        config MQTT_SENSOR_ID
+            string "Sensor ID"
+            default "7i29r9k9ltaxmbev"
+            help
+                Unique identifier for the sensor.
+
+                This ID is used to construct MQTT topics for publishing data.
+
+                **Example:**
+                If `MQTT_TOPIC` is set to "xiao/sensor" and `MQTT_SENSOR_ID` is "7i29r9k9ltaxmbev",
+                the resulting MQTT topic for data will be:
+                `xiao/sensor/7i29r9k9ltaxmbev/data`
+
+        choice MQTT_QOS
+             prompt "MQTT Quality of Service"
+             default MQTT_QOS_2
+             help
+                 Quality of Service (QoS) level for MQTT messages:
+
+                 - **0**: At most once – Messages are delivered according to the best efforts of the operating environment. Messages may be lost.
+                 - **1**: At least once – Ensures that the message arrives at the receiver, but duplicates may occur.
+                 - **2**: Exactly once – Ensures that each message is received only once by the intended recipients.
+
+             config MQTT_QOS_0
+                 bool "0 (At most once)"
+                 help
+                     QoS level 0: Messages are delivered at most once, with no confirmation.
+
+             config MQTT_QOS_1
+                 bool "1 (At least once)"
+                 help
+                     QoS level 1: Messages are delivered at least once, ensuring delivery but allowing duplicates.
+
+             config MQTT_QOS_2
+                 bool "2 (Exactly once)"
+                 help
+                     QoS level 2: Messages are delivered exactly once by using a four-step handshake. This is the safest and slowest level.
+        endchoice
+
+        config MQTT_RETAIN
+            int "MQTT Retain Flag"
+            default 1
+            help
+                Retain flag for MQTT messages.
+
+        config MQTT_PUBLISHING_TIMEOUT_PERIOD
+            int "MQTT Publishing Timeout Period"
+            default 30
+            help
+                Timeout period in seconds for MQTT publishing.
+
+        config MQTT_ENABLE_AUTH
+            bool "Enable MQTT Authentication"
+            default n
+            help
+                Enable authentication for connecting to the MQTT broker.
+
+        config MQTT_USERNAME
+            string "MQTT Username"
+            depends on MQTT_ENABLE_AUTH
+            default "user"
+            help
+                Username for authenticating with the MQTT broker.
+
+        config MQTT_PASSWORD
+            string "MQTT Password"
+            depends on MQTT_ENABLE_AUTH
+            default "password"
+            help
+                Password for authenticating with the MQTT broker.
+    endmenu
+
+    # Sensor Type Selection
+    choice SENSOR_TYPE
+        prompt "Select Sensor Type"
+        default SENSOR_NO_SENSOR
+        help
+            Choose the type of sensor to use for environmental measurements.
+            - **No Sensor**: Disable sensor functionalities.
+            - **BME280**: Enable configuration for the BME280 sensor.
+            - **BME680**: Enable configuration for the BME680 sensor.
+
+        config SENSOR_NO_SENSOR
+            bool "No Sensor"
+            help
+                Do not enable any sensor-related configurations.
+
+        config SENSOR_BME280
+            bool "BME280"
+            help
+                Enable configuration for the BME280 sensor.
+
+        config SENSOR_BME680
+            bool "BME680"
+            help
+                Enable configuration for the BME680 sensor.
+    endchoice
+
+    menu "BME680 Configuration"
+        depends on SENSOR_BME680
+
+        config BME680_POWER_PIN
+            int "BME680 Power Pin"
+            default 20
+            help
+                GPIO pin used to power up and down the BME680 sensor.
+
+        config BME680_I2C_ADDR
+            hex "BME680 I2C Address"
+            default 0x77
+            help
+                I2C address of the BME680 sensor.
+
+        config BME680_I2C_PORT
+            int "BME680 I2C Port"
+            default 0
+            help
+                I2C port number to which the BME680 sensor is connected.
+
+        config BME680_I2C_SDA
+            int "BME680 I2C SDA Pin"
+            default 21
+            help
+                GPIO pin used for I2C SDA (data) line for the BME680 sensor.
+
+        config BME680_I2C_SCL
+            int "BME680 I2C SCL Pin"
+            default 22
+            help
+                GPIO pin used for I2C SCL (clock) line for the BME680 sensor.
+    endmenu
+    menu "BME280 Configuration"
+        depends on SENSOR_BME280
+
+        config BME280_POWER_PIN
+            int "BME280 Power Pin"
+            default 19
+            help
+                GPIO pin used to power up and down the BME280 sensor.
+
+        config BME280_I2C_ADDR
+            hex "BME280 I2C Address"
+            default 0x76
+            help
+                I2C address of the BME280 sensor.
+
+        config BME280_I2C_PORT
+            int "BME280 I2C Port"
+            default 0
+            help
+                I2C port number to which the BME280 sensor is connected.
+
+        config BME280_I2C_SDA
+            int "BME280 I2C SDA Pin"
+            default 21
+            help
+                GPIO pin used for I2C SDA (data) line for the BME280 sensor.
+
+        config BME280_I2C_SCL
+            int "BME280 I2C SCL Pin"
+            default 22
+            help
+                GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
+    endmenu
+endmenu

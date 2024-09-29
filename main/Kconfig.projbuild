@@ -93,10 +93,8 @@ menu "XIAO Sensor Configuration"
                 **Notes:**
                 - Setting to "01" (World Safe Mode) disables the country IE in SoftAP mode.
                 - The third character of the country code string must be one of the following: ' ', 'O', 'I', 'X'. Otherwise, it defaults to ' '.
-
-        config ESP_WIFI_ANTENNA
-            choice "WiFi Antenna Selection"
-            prompt "WiFi Antenna"
+        choice ESP_WIFI_ANTENNA
+            prompt "WiFi Antenna Selection"
             default WIFI_ANTENNA_BUILT_IN
             help
                 Select which antenna to use for WiFi operations.
@@ -295,5 +293,32 @@ menu "XIAO Sensor Configuration"
             default 22
             help
                 GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
+    endmenu
+    menu "ADC Configuration"
+        config BATTERY_VOLTAGE_DIVIDER_RATIO_INT
+            int "Battery Voltage Divider Ratio (x100)"
+            default 200
+            help
+                Voltage divider ratio used to scale down the battery voltage before measuring via ADC.
+                This ensures the voltage does not exceed the ADC's maximum input voltage (3.3 V).
+
+                - **Representation:** The ratio is stored as an integer multiplied by 100.
+                  For example:
+                  - 7.5 is represented as 750
+                  - 10.0 is represented as 1000
+
+                - **Usage:** In the code, divide this value by 100.0 to get the actual ratio.
+    endmenu
+    menu "Power Management Configuration"
+        config WAKEUP_TIME_SEC
+            int "Wakeup Time (seconds)"
+            default 300
+            help
+                Defines the duration in seconds that the device will remain in deep sleep before waking up.
+
+                - **Default**: 300 seconds (5 minutes)
+                - **Usage**: Determines how long the device stays in deep sleep before it automatically wakes up.
+                - **Range**: 5 - 86400 (5 seconds to 24 hours)
+
     endmenu
 endmenu

@@ -4,5 +4,6 @@ idf_component_register(SRCS
     "sensor_wifi.c"
     "sensor_mqtt.c"
     "sensor_gpio.c"
+    "sensor_adc.c"
     INCLUDE_DIRS "."
 )

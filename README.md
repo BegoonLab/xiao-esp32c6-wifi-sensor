@@ -191,8 +191,10 @@ Follow these steps to set up your Smart IoT Sensor:
 - **Voltage Divider Components**: If battery voltage monitoring is required.
 - **Additional Components**:
   - Connectors and cables
-  - Optional: Bluetooth module for provisioning
-
+  - External antenna (optional, but highly recommended for weak WiFi signals).
+    - These antennas tested and worked quite well with this build: 
+    - PCB Antenna 5dBi ![SensorXIAO_external_antenna.jpg](assets/SensorXIAO_external_antenna.jpg)
+    - RadioMaster ![SensorXIAO_external_antenna_radiomaster.png](assets/SensorXIAO_external_antenna_radiomaster.png)
 ### Assembly Instructions
 
 1. **Mount the Sensor**: Connect the BME280/BME680 to the XIAO ESP32C6.
@@ -212,15 +214,14 @@ Follow these steps to set up your Smart IoT Sensor:
 
    Follow the [ESP-IDF Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html) to set up the development environment.
 
-2**Configure the Project**
+2. **Configure the Project**
 
     ```bash
     idf.py menuconfig
     ```
-
-  - Set WiFi credentials
-  - Configure MQTT broker details
-  - Enable or disable optional features
+   - Set WiFi credentials
+   - Configure MQTT broker details
+   - Enable or disable optional features
 
 3. **Build and Flash**
 

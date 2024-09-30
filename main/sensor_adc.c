@@ -12,14 +12,7 @@
 
 #include "sensor_adc.h"
 
-//ADC1 Channels
-#if CONFIG_IDF_TARGET_ESP32
-#define ADC1_CHAN0          ADC_CHANNEL_4
-#define ADC1_CHAN1          ADC_CHANNEL_5
-#else
-#define ADC1_CHAN0          ADC_CHANNEL_2
-#define ADC1_CHAN1          ADC_CHANNEL_3
-#endif
+#define ADC1_CHAN0          ADC_CHANNEL_0
 
 static const char *TAG = "sensor_adc";
 
@@ -35,6 +28,7 @@ static int voltage;
 void init_adc(void){
     adc_oneshot_unit_init_cfg_t init_config1 = {
             .unit_id = ADC_UNIT_1,
+            .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
 
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &adc1_handle));
@@ -70,10 +64,10 @@ bool adc_calibration_init(adc_unit_t unit, adc_channel_t channel, adc_atten_t at
     if (!calibrated) {
         ESP_LOGI(TAG, "calibration scheme version is %s", "Curve Fitting");
         adc_cali_curve_fitting_config_t cali_config = {
-            .unit_id = unit,
-            .chan = channel,
-            .atten = atten,
-            .bitwidth = ADC_BITWIDTH_DEFAULT,
+                .unit_id = unit,
+                .chan = channel,
+                .atten = atten,
+                .bitwidth = ADC_BITWIDTH_DEFAULT,
         };
         ret = adc_cali_create_scheme_curve_fitting(&cali_config, &handle);
         if (ret == ESP_OK) {
@@ -129,7 +123,6 @@ void deinit_adc(void) {
 }
 
 void get_battery_voltage(double *battery_voltage) {
-
     // Retrieve and convert the divider ratio
     double voltage_divider_ratio = CONFIG_BATTERY_VOLTAGE_DIVIDER_RATIO_INT / 100.0;
 
@@ -155,5 +148,5 @@ void get_battery_voltage(double *battery_voltage) {
     battery_voltage_mv /= 8;
 
     // Convert milli-volts to volts with two decimal places
-    *battery_voltage = round((battery_voltage_mv * 3.3 * voltage_divider_ratio / 1000.0) * 100.0) / 100.0;
+    *battery_voltage = round((battery_voltage_mv * voltage_divider_ratio / 1000.0) * 100.0) / 100.0;
 }

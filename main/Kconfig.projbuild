@@ -233,7 +233,7 @@ menu "XIAO Sensor Configuration"
 
         config BME680_POWER_PIN
             int "BME680 Power Pin"
-            default 20
+            default 21
             help
                 GPIO pin used to power up and down the BME680 sensor.
 
@@ -251,13 +251,13 @@ menu "XIAO Sensor Configuration"
 
         config BME680_I2C_SDA
             int "BME680 I2C SDA Pin"
-            default 21
+            default 22
             help
                 GPIO pin used for I2C SDA (data) line for the BME680 sensor.
 
         config BME680_I2C_SCL
             int "BME680 I2C SCL Pin"
-            default 22
+            default 23
             help
                 GPIO pin used for I2C SCL (clock) line for the BME680 sensor.
     endmenu
@@ -266,7 +266,7 @@ menu "XIAO Sensor Configuration"
 
         config BME280_POWER_PIN
             int "BME280 Power Pin"
-            default 19
+            default 21
             help
                 GPIO pin used to power up and down the BME280 sensor.
 
@@ -284,17 +284,25 @@ menu "XIAO Sensor Configuration"
 
         config BME280_I2C_SDA
             int "BME280 I2C SDA Pin"
-            default 21
+            default 22
             help
                 GPIO pin used for I2C SDA (data) line for the BME280 sensor.
 
         config BME280_I2C_SCL
             int "BME280 I2C SCL Pin"
-            default 22
+            default 23
             help
                 GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
     endmenu
+    config ENABLE_BATTERY_CHECK
+        bool "Enable Battery Voltage Check"
+        default n
+        help
+            Enable checking of the battery voltage.
+            When enabled, the ADC Configuration menu will be displayed to configure ADC settings related to battery monitoring.
     menu "ADC Configuration"
+        depends on ENABLE_BATTERY_CHECK
+
         config BATTERY_VOLTAGE_DIVIDER_RATIO_INT
             int "Battery Voltage Divider Ratio (x100)"
             default 200

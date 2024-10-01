@@ -65,14 +65,20 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 # Schematics
 
 ### Battery Connection
-![SensorXIAO_battery_connection.png](assets/SensorXIAO_battery_connection.png)
+<img alt="SensorXIAO_battery_connection.png" src="assets/SensorXIAO_battery_connection.png" width="500"/>
+
 *A battery connection schematic.*
 
 ### Voltage Divider
-![SensorXIAO_voltage_divider.png](assets/SensorXIAO_voltage_divider.png)
+<img alt="SensorXIAO_voltage_divider.png" src="assets/SensorXIAO_voltage_divider.png" width="500"/>
+
 *Voltage divider schematic (if battery voltage monitoring is required).*
 
 **Note:** This solution continuously consumes some current from the battery but is functional for voltage monitoring.
+
+### BME280/BME680 Connection
+
+<img alt="SensorXIAO_connect_bme.png" src="assets/SensorXIAO_connect_bme.png" width="500"/>
 
 ## Configuration
 
@@ -148,6 +154,34 @@ mqtt:
 ...
 ```
 3. **Restart Home Assistant**: After updating the configuration, restart Home Assistant to apply the changes.
+4. **Configure Entity Card**: Here is an example configuration for the entity card:
+```yaml
+...
+type: entities
+entities:
+  - entity: sensor.sensor_temperature_7i29r9k9ltaxmbev
+    icon: mdi:thermometer-low
+    secondary_info: last-changed
+    name: Temperature
+  - entity: sensor.sensor_humidity_7i29r9k9ltaxmbev
+    name: Humidity
+  - entity: sensor.sensor_pressure_7i29r9k9ltaxmbev
+    name: Pressure
+  - entity: sensor.sensor_rssi_7i29r9k9ltaxmbev
+    icon: mdi:wifi-strength-3
+    secondary_info: none
+    name: RSSI
+  - entity: sensor.sensor_battery_voltage_7i29r9k9ltaxmbev
+    icon: mdi:battery-80
+    secondary_info: none
+    name: Battery
+  - entity: sensor.sensor_connection_duration_7i29r9k9ltaxmbev
+    name: Connection Duration
+title: Sensor 7i29r9k9ltaxmbev
+...
+```
+
+<img alt="SensorXIAO_ha_card.png" src="assets/SensorXIAO_ha_card.png" width="500"/>
 
 ## Getting Started
 
@@ -191,10 +225,12 @@ Follow these steps to set up your Smart IoT Sensor:
 - **Voltage Divider Components**: If battery voltage monitoring is required.
 - **Additional Components**:
   - Connectors and cables
-  - External antenna (optional, but highly recommended for weak WiFi signals).
+  - External antenna (optional, but highly recommended for weak WiFi signals). This is RSSI without and then with external antenna: ![SensorXIAO_rssi_antenna.png](assets/SensorXIAO_rssi_antenna.png)
     - These antennas tested and worked quite well with this build: 
-    - PCB Antenna 5dBi ![SensorXIAO_external_antenna.jpg](assets/SensorXIAO_external_antenna.jpg)
-    - RadioMaster ![SensorXIAO_external_antenna_radiomaster.png](assets/SensorXIAO_external_antenna_radiomaster.png)
+    - PCB Antenna 5dBi and U.FL connector 
+    - <img alt="SensorXIAO_external_antenna.jpg" src="assets/SensorXIAO_external_antenna.jpg" width="500"/>
+    - RadioMaster FPV Drone antenna 
+    - <img alt="SensorXIAO_external_antenna_radiomaster.png" src="assets/SensorXIAO_external_antenna_radiomaster.png" width="500"/>
 ### Assembly Instructions
 
 1. **Mount the Sensor**: Connect the BME280/BME680 to the XIAO ESP32C6.

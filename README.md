@@ -1,6 +1,6 @@
 # Smart IoT Sensor built with XIAO ESP32C6
 
-**WiFi, MQTT, BME280/BME680 Integration & Power Management**
+**Wi-Fi, MQTT, BME280/BME680 Integration & Power Management**
 
 ## Table of Contents
 
@@ -20,13 +20,13 @@
 
 ## Introduction
 
-The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates WiFi connectivity, MQTT messaging, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
+The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates Wi-Fi connectivity, MQTT messaging, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
 
 ![introduction.jpg](assets/introduction.jpg)
 
 ## Features
 
-- **WiFi Connectivity**: Seamless connection to your home or office network.
+- **Wi-Fi Connectivity**: Seamless connection to your home or office network.
 - **MQTT Integration**: Publishes sensor data to an MQTT broker in JSON format.
 - **Environmental Sensing**: Supports [Bosch BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/) and [BME680](https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/) sensors for temperature, humidity, and pressure measurements.
 - **Power Management**: Efficiently manages power using LiPo batteries with built-in charge management.
@@ -34,7 +34,7 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 - **Optional Features**:
     - Battery voltage monitoring
     - Connection duration tracking
-    - Future support for WiFi 6 and Bluetooth provisioning (TODO)
+    - Future support for Wi-Fi 6 and Bluetooth provisioning (TODO)
 
 ## Usage
 
@@ -97,20 +97,52 @@ Then go to `XIAO Sensor Configuration`
 2. **MQTT Configuration**: Connect the sensor to your MQTT server by providing the necessary broker details.
 3. **Battery Check (Optional)**: Enable battery voltage monitoring if power management insights are needed.
 4. **BME Sensor Configuration (Optional)**: Choose between BME280 and BME680 sensors based on your requirements.
-5. **Power Management Configuration**: Set up wakeup. The duration in seconds that the device will remain in deep sleep before waking up
+5. **Power Management Configuration**: Set up wakeup duration, which is the duration in seconds that the device will remain in deep sleep before waking up.
 
-<img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
+5. <img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
 
 ## Enclosure
 
 The sensor is housed in a customizable 3D-printed enclosure. [STL files](3d/enclosure/stl) are available for download and 3D printing.
 To customize a model use a [FreeCAD project](3d/enclosure/XIAO_ESP32C6_Enclosure.FCStd).
+A 3D preview is available [here](https://begoonlab.tech/cad_design/instructables.com/XIAO_ESP32C6_Enclosure.html).
 
 When printing, it is recommended to orient the parts on the hotbed as shown in the picture:
 
 <img alt="printing_setup_0.png" src="3d/enclosure/printing_setup_0.png" width="500"/>
 
 <img alt="printing_setup_1.png" src="3d/enclosure/printing_setup_1.png" width="500"/>
+
+Enclosure assembly steps:
+1. Insert XIAO board into [SoC_holder](3d/enclosure/stl/soc_holder.stl) :
+
+<img alt="SensorXIAO_assemby_0.jpg" src="assets/SensorXIAO_assemby_0.jpg" width="500"/>
+
+2. Insert holder into the [core part](3d/enclosure/stl/core.stl) :
+
+<img alt="SensorXIAO_assembly_1.jpg" src="assets/SensorXIAO_assembly_1.jpg" width="500"/>
+
+Pull down until it can't go any farther
+
+<img alt="SensorXIAO_assembly_2.jpg" src="assets/SensorXIAO_assembly_2.jpg" width="500"/>
+
+3. Insert [SoC bracket](3d/enclosure/stl/soc_bracket.stl) :
+
+<img alt="SensorXIAO_assembly_3.jpg" src="assets/SensorXIAO_assembly_3.jpg" width="500"/>
+
+4. Insert BME sensor
+
+<img alt="SensorXIAO_assembly_4.jpg" src="assets/SensorXIAO_assembly_4.jpg" width="500"/>
+
+5. Attach an antenna. Put the coaxial wire into the channels in the core part. Use a couple of drops of glue or double-sided tape to secure the antenna in its place.
+
+<img alt="SensorXIAO_assembly_5.jpg" src="assets/SensorXIAO_assembly_5.jpg" width="500"/>
+
+6. Now solder up everything together according to [schematics](#schematics). And repeat an assembly steps if everything fits nicely.
+
+<img alt="SensorXIAO_assembly_6.jpg" src="assets/SensorXIAO_assembly_6.jpg" width="500"/>
+
+<img alt="SensorXIAO_assembly_7.jpg" src="assets/SensorXIAO_assembly_7.jpg" width="500"/>
 
 ## Integration with Home Assistant
 
@@ -208,7 +240,7 @@ Follow these steps to set up your Smart IoT Sensor:
 
 3. **Configure the Sensor**
 
-   Edit the configuration files to set your WiFi and MQTT credentials.
+   Edit the configuration files to set your Wi-Fi and MQTT credentials.
 
 4. **Build and Flash**
 
@@ -232,8 +264,8 @@ Follow these steps to set up your Smart IoT Sensor:
 - **Voltage Divider Components**: If battery voltage monitoring is required.
 - **Additional Components**:
   - Connectors and cables
-  - External antenna (optional, but highly recommended for weak WiFi signals). This is RSSI without and then with external antenna: ![SensorXIAO_rssi_antenna.png](assets/SensorXIAO_rssi_antenna.png)
-    - These antennas tested and worked quite well with this build: 
+  - External antenna (optional, but highly recommended for weak Wi-Fi signals). This is RSSI without and then with external antenna: ![SensorXIAO_rssi_antenna.png](assets/SensorXIAO_rssi_antenna.png)
+    - These antennas tested and worked quite well with this build:
     - PCB Antenna 5dBi and U.FL connector 
     - <img alt="SensorXIAO_external_antenna.jpg" src="assets/SensorXIAO_external_antenna.jpg" width="500"/>
     - RadioMaster FPV Drone antenna 
@@ -262,7 +294,7 @@ Follow these steps to set up your Smart IoT Sensor:
     ```bash
     idf.py menuconfig
     ```
-   - Set WiFi credentials
+   - Set Wi-Fi credentials
    - Configure MQTT broker details
    - Enable or disable optional features
 

@@ -55,14 +55,14 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 }
 ```
 - **ID**: Unique identifier of the sensor
-- **RSSI**: WiFi signal strength in dBm
+- **RSSI**: Wi-Fi signal strength in dBm
 - **battery_voltage**: Current battery voltage
 - **temperature**: Temperature reading from the BME sensor
 - **humidity**: Humidity reading from the BME sensor
 - **pressure**: Pressure reading from the BME sensor
 - **connection_duration_ms**: Time taken to establish the MQTT connection
 
-# Schematics
+## Schematics
 
 ### Battery Connection
 <img alt="SensorXIAO_battery_connection.png" src="assets/SensorXIAO_battery_connection.png" width="500"/>
@@ -82,7 +82,7 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 
 ## Configuration
 
-This build developed and tested with [ESP-IDF v5.3.1](https://github.com/espressif/esp-idf/releases/tag/v5.3.1)
+This build was developed and tested with [ESP-IDF v5.3.1](https://github.com/espressif/esp-idf/releases/tag/v5.3.1)
 Follow [this instruction](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html#manual-installation) to install it. It is required.
 
 Configure the sensor using the following steps:
@@ -97,13 +97,20 @@ Then go to `XIAO Sensor Configuration`
 2. **MQTT Configuration**: Connect the sensor to your MQTT server by providing the necessary broker details.
 3. **Battery Check (Optional)**: Enable battery voltage monitoring if power management insights are needed.
 4. **BME Sensor Configuration (Optional)**: Choose between BME280 and BME680 sensors based on your requirements.
-4. **Power Management Configuration**: Setup wakeup. The duration in seconds that the device will remain in deep sleep before waking up
+5. **Power Management Configuration**: Set up wakeup. The duration in seconds that the device will remain in deep sleep before waking up
+
+<img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
 
 ## Enclosure
 
-The sensor is housed in a customizable 3D-printed enclosure. STL files are available for download and 3D printing.
+The sensor is housed in a customizable 3D-printed enclosure. [STL files](3d/enclosure/stl) are available for download and 3D printing.
+To customize a model use a [FreeCAD project](3d/enclosure/XIAO_ESP32C6_Enclosure.FCStd).
 
-*Placeholder for STL files download link or additional instructions.*
+When printing, it is recommended to orient the parts on the hotbed as shown in the picture:
+
+<img alt="printing_setup_0.png" src="3d/enclosure/printing_setup_0.png" width="500"/>
+
+<img alt="printing_setup_1.png" src="3d/enclosure/printing_setup_1.png" width="500"/>
 
 ## Integration with Home Assistant
 

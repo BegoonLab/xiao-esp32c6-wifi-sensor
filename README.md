@@ -144,6 +144,14 @@ Pull down until it can't go any farther
 
 <img alt="SensorXIAO_assembly_7.jpg" src="assets/SensorXIAO_assembly_7.jpg" width="500"/>
 
+7. Insert [lock](3d/enclosure/stl/lock.stl) into the [core part](3d/enclosure/stl/core.stl) as shown:
+
+<img alt="SensorXIAO_assembly_8.jpg" src="assets/SensorXIAO_assembly_8.jpg" width="500"/>
+
+8. Finally, pull [the wrapper](3d/enclosure/stl/wrapper.stl) onto the [core part](3d/enclosure/stl/core.stl). Ensure that the [lock](3d/enclosure/stl/lock.stl) is securing the wrapper.
+
+<img alt="SensorXIAO_assembly_9.jpg" src="assets/SensorXIAO_assembly_9.jpg" width="500"/>
+
 ## Integration with Home Assistant
 
 Integrate the Smart IoT Sensor with Home Assistant by following these steps:

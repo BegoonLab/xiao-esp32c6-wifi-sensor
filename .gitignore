@@ -2,3 +2,6 @@
 /build/
 cmake-*
 /sdkconfig.old
+/sdkconfig
+dependencies.lock
+managed_components

@@ -14,6 +14,7 @@
 - [Getting Started](#getting-started)
 - [Hardware](#hardware)
 - [Software](#software)
+- [ZigBee](#zigbee)
 - [Contributing](#contributing)
 - [License](#license)
 - [TODO](#todo)
@@ -31,6 +32,7 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 - **Environmental Sensing**: Supports [Bosch BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/) and [BME680](https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/) sensors for temperature, humidity, and pressure measurements.
 - **Power Management**: Efficiently manages power using LiPo batteries with built-in charge management.
 - **Deep Sleep Mode**: Extends battery life by enabling deep sleep between data transmissions.
+- **ZigBee Connectivity**: Seamless integration with ZigBee networks. Supports standard ZigBee clusters, easily pair your sensor with ZigBee coordinators like Home Assistant.
 - **Optional Features**:
     - Battery voltage monitoring
     - Connection duration tracking
@@ -312,6 +314,21 @@ Follow these steps to set up your Smart IoT Sensor:
     idf.py build
     idf.py -p <TARGET_PORT> flash
     ```
+
+## ZigBee
+ZigBee can be activated in the menu:
+```bash
+idf.py menuconfig
+```
+Navigate to `XIAO Sensor Configuration` → `Select Sensor Connection Type` → `ZigBee`.
+
+Next, go to `Component config` → `Zigbee` → `Zigbee Enable` and set it to ON. Then, go to `XIAO Sensor Configuration` → `ZigBee Configuration` and set a `Sensor ID`.
+
+Build and flash the firmware. After that, the sensor will be ready and will begin commissioning.
+
+To add the sensor to Home Assistant: go to `Settings` → `Devices & Services` → `Devices` → `Add Device` → `Add Zigbee device`. Once completed, your sensor will appear on the Devices page:
+
+<img alt="SensorXIAO_zb_device.png" src="assets/SensorXIAO_zb_device.png" width="500"/>
 
 ## Contributing
 

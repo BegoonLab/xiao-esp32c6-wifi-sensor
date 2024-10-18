@@ -67,6 +67,10 @@ void init_bme(void) {
     gpio_set_direction(CONFIG_BME280_POWER_PIN, GPIO_MODE_OUTPUT);
 
     gpio_set_level(CONFIG_BME280_POWER_PIN, HIGH);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    gpio_set_level(CONFIG_BME280_POWER_PIN, LOW);
+    vTaskDelay(pdMS_TO_TICKS(100));
+    gpio_set_level(CONFIG_BME280_POWER_PIN, HIGH);
     ESP_LOGI(TAG, "BME280 powered on");
 
     vTaskDelay(pdMS_TO_TICKS(25));

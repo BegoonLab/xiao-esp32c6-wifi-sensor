@@ -10,6 +10,7 @@
  *            All rights reserved.
  */
 
+#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 #include "sensor_wifi.h"
 
 /* FreeRTOS event group to signal when we are connected*/
@@ -133,3 +134,4 @@ void event_handler(void *arg, esp_event_base_t event_base,
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
+#endif

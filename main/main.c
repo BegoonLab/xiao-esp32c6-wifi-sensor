@@ -67,6 +67,12 @@ void app_main(void) {
     esp_mqtt_client_handle_t mqtt_client = init_mqtt_client();
 #endif
 
+#ifdef CONFIG_SENSOR_CONNECTION_ZIGBEE
+    init_zb();
+
+    start_zb();
+#endif
+
     struct timeval end_to_connect;
     gettimeofday(&end_to_connect, NULL);
 
@@ -95,5 +101,5 @@ void app_main(void) {
     ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000));
 
     // Enter deep sleep
-    esp_deep_sleep_start();
+    //esp_deep_sleep_start();
 }

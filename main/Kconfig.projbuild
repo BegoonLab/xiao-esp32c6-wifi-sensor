@@ -224,7 +224,15 @@ menu "XIAO Sensor Configuration"
 
     menu "ZigBee Configuration"
         depends on SENSOR_CONNECTION_ZIGBEE
-
+        config SENSOR_ID
+            string "Sensor ID"
+            default "7i29r9k9ltaxmbev"
+            help
+                Unique identifier for the sensor.
+        config ZIGBEE_ANTENNA_EXTERNAL
+            bool "External Antenna"
+            help
+                Use an external antenna for ZigBee connectivity.
     endmenu
 
     # Sensor Type Selection

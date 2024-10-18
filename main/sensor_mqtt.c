@@ -10,6 +10,7 @@
  *            All rights reserved.
  */
 
+#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 #include "sensor_mqtt.h"
 
 static const char *TAG = "sensor_mqtt";
@@ -152,3 +153,4 @@ void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage, doub
 
     cJSON_Delete(json);
 }
+#endif

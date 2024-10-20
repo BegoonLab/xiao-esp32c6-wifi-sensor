@@ -45,15 +45,16 @@ float humidity = 0;
 float pressure = 0;
 
 void app_main(void) {
-
 #ifdef CONFIG_ENABLE_BATTERY_CHECK
     init_adc();
     get_battery_voltage(&battery_voltage);
     ESP_LOGI(TAG, "Battery Voltage: %.2f V", battery_voltage);
+    ESP_LOGI(TAG, "SW version: %s", GIT_COMMIT_HASH);
     deinit_adc();
 #endif
     init_nvs();
     init_gpio();
+    init_led();
 #ifndef CONFIG_SENSOR_NO_SENSOR
     init_bme();
     read_bme(&temperature, &humidity, &pressure);

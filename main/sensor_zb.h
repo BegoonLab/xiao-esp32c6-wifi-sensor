@@ -12,12 +12,20 @@
 
 #pragma once
 
-#include "esp_zigbee_core.h"
 #include "esp_check.h"
 #include "esp_log.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "esp_sleep.h"
+#include "esp_timer.h"
+#include "esp_zigbee_core.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "ha/esp_zigbee_ha_standard.h"
+#include "sensor_led.h"
+#include "sys/time.h"
+#include "time.h"
+#include "zcl/esp_zigbee_zcl_power_config.h"
+#include <stdio.h>
+#include <string.h>
 
 /* ZigBee configuration */
 #define INSTALLCODE_POLICY_ENABLE       false   /* enable the installation code policy for security */
@@ -30,11 +38,18 @@
 #define ESP_TEMP_SENSOR_MIN_VALUE       (-10)   /* Local sensor min measured value (degree Celsius) */
 #define ESP_TEMP_SENSOR_MAX_VALUE       (80)    /* Local sensor max measured value (degree Celsius) */
 
+#define ESP_HUMIDITY_SENSOR_MIN_VALUE 0
+#define ESP_HUMIDITY_SENSOR_MAX_VALUE 100
+
+#define ESP_PRESSURE_SENSOR_MIN_VALUE 500
+#define ESP_PRESSURE_SENSOR_MAX_VALUE 1500
+
+#define MAX_ZCL_STRING_LEN 64
+
 /* Attribute values in ZCL string format
  * The string should be started with the length of its own.
  */
-#define MANUFACTURER_NAME               "\x09""ESPRESSIF"
-#define MODEL_IDENTIFIER                "\x07"CONFIG_IDF_TARGET
+#define MANUFACTURER_NAME               "ESPRESSIF"
 
 #define ESP_ZB_ZED_CONFIG()                                         \
     {                                                               \
@@ -56,17 +71,17 @@
         .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE,   \
     }
 
+#if !defined(GIT_COMMIT_HASH)
+#error "GIT_COMMIT_HASH is missing"
+#endif
+
 static void sensor_zb_task(void *pvParameters);
 
 void init_zb(void);
 
 void start_zb(void);
 
+static int16_t zb_value_to_s16(float value);
 
-static int16_t zb_temperature_to_s16(float temp);
-
-static esp_zb_ep_list_t *
-custom_temperature_sensor_ep_create(uint8_t endpoint_id, esp_zb_temperature_sensor_cfg_t *temperature_sensor);
-
-static esp_zb_cluster_list_t *
-custom_temperature_sensor_clusters_create(esp_zb_temperature_sensor_cfg_t *temperature_sensor);
+static char *build_zcl_string(const char *input_string);
+static void zb_deep_sleep_start(void);

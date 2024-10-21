@@ -21,6 +21,7 @@
 #include "freertos/task.h"
 #include "ha/esp_zigbee_ha_standard.h"
 #include "sensor_led.h"
+#include "sensor_bme.h"
 #include "sys/time.h"
 #include "time.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
@@ -84,4 +85,16 @@ void start_zb(void);
 static int16_t zb_value_to_s16(float value);
 
 static char *build_zcl_string(const char *input_string);
+
 static void zb_deep_sleep_start(void);
+
+static void zb_deep_sleep_init(void);
+
+static void s_oneshot_timer_callback(void *arg);
+
+static esp_zb_ep_list_t *custom_sensor_ep_create(
+        uint8_t endpoint_id, esp_zb_configuration_tool_cfg_t *sensor);
+
+static void sensor_zb_update_task(void *arg);
+
+double calculate_battery_percentage(double voltage);

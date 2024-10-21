@@ -56,6 +56,7 @@ void led_effect_task(void *pvParameters) {
 
     while (1) {
         // Wait for an effect to be queued
+        turn_off();
         if (xQueueReceive(led_effect_queue, &current_effect, portMAX_DELAY)) {
             switch (current_effect) {
                 case LED_EFFECT_BREATH:
@@ -70,7 +71,6 @@ void led_effect_task(void *pvParameters) {
                 default:
                     break;
             }
-            turn_off();
         }
     }
 }

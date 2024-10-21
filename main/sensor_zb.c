@@ -15,6 +15,9 @@
 static const char *TAG = "sensor_zigbee";
 static esp_timer_handle_t s_oneshot_timer;
 
+bool go_sleep = false;
+
+extern double battery_voltage;
 extern float temperature;
 extern float humidity;
 extern float pressure;
@@ -37,16 +40,45 @@ static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
                         TAG, "Failed to start Zigbee bdb commissioning");
 }
 
-static esp_err_t deferred_driver_init(void) {
-//    temperature_sensor_config_t temp_sensor_config =
-//            TEMPERATURE_SENSOR_CONFIG_DEFAULT(ESP_TEMP_SENSOR_MIN_VALUE, ESP_TEMP_SENSOR_MAX_VALUE);
-//    ESP_RETURN_ON_ERROR(temp_sensor_driver_init(&temp_sensor_config, ESP_TEMP_SENSOR_UPDATE_INTERVAL, esp_app_temp_sensor_handler), TAG,
-//                        "Failed to initialize temperature sensor");
-//    ESP_RETURN_ON_FALSE(switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_app_buttons_handler), ESP_FAIL, TAG,
-//                        "Failed to initialize switch driver");
-    return ESP_OK;
+static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t *message) {
+    esp_err_t ret = ESP_OK;
+
+    ESP_RETURN_ON_FALSE(message, ESP_FAIL, TAG, "Empty message");
+    ESP_RETURN_ON_FALSE(message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS, ESP_ERR_INVALID_ARG, TAG,
+                        "Received message: error status(%d)",
+                        message->info.status);
+    ESP_LOGI(TAG, "Received message: endpoint(%d), cluster(0x%x), attribute(0x%x), data size(%d)",
+             message->info.dst_endpoint, message->info.cluster,
+             message->attribute.id, message->attribute.data.size);
+
+    if (message->info.dst_endpoint == HA_ESP_SENSOR_ENDPOINT) {
+        if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY) {
+            if (message->attribute.id == ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID) {
+                trigger_breath_effect();
+            }
+
+            if (message->attribute.id == ESP_ZB_ZCL_IDENTIFY_EFFECT_ID_OKAY) {
+                trigger_quick_blink();
+            }
+        }
+    }
+
+    return ret;
 }
 
+static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {
+    esp_err_t ret = ESP_OK;
+    switch (callback_id) {
+        case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID:
+        case ESP_ZB_CORE_IDENTIFY_EFFECT_CB_ID:
+            ret = zb_attribute_handler((esp_zb_zcl_set_attr_value_message_t *) message);
+            break;
+        default:
+            ESP_LOGW(TAG, "Receive ZigBee action(0x%x) callback", callback_id);
+            break;
+    }
+    return ret;
+}
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     uint32_t *p_sg_p = signal_struct->p_app_signal;
@@ -65,13 +97,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
             if (err_status == ESP_OK) {
                 trigger_breath_effect();
-                ESP_LOGI(TAG, "Deferred driver initialization %s", deferred_driver_init() ? "failed" : "successful");
+                xTaskCreate(sensor_zb_update_task, "Zigbee_update", 4096, NULL, 5, NULL);
                 ESP_LOGI(TAG, "Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
                 if (esp_zb_bdb_is_factory_new()) {
                     ESP_LOGI(TAG, "Start network steering");
                     esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
                 } else {
-                    zb_deep_sleep_start();
                     ESP_LOGI(TAG, "Device rebooted");
                 }
             } else {
@@ -89,12 +120,15 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                          extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
                          extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
                          esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
-                zb_deep_sleep_start();
             } else {
                 ESP_LOGW(TAG, "Network steering was not successful (status: %s)", esp_err_to_name(err_status));
                 esp_zb_scheduler_alarm((esp_zb_callback_t) bdb_start_top_level_commissioning_cb,
                                        ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
             }
+            break;
+        case ESP_ZB_COMMON_SIGNAL_CAN_SLEEP:
+            zb_deep_sleep_start();
+            esp_zb_sleep_now();
             break;
         default:
             ESP_LOGI(TAG, "ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type,
@@ -153,7 +187,7 @@ static esp_zb_cluster_list_t *custom_sensor_clusters_create(esp_zb_configuration
 
     // Add Pressure Measurement cluster
     esp_zb_pressure_meas_cluster_cfg_t pressure_cfg = {
-            .measured_value = zb_value_to_s16(humidity),
+            .measured_value = (int16_t) (pressure),
             .min_value = zb_value_to_s16(ESP_PRESSURE_SENSOR_MIN_VALUE),
             .max_value = zb_value_to_s16(ESP_PRESSURE_SENSOR_MAX_VALUE)
     };
@@ -163,23 +197,34 @@ static esp_zb_cluster_list_t *custom_sensor_clusters_create(esp_zb_configuration
 
     // Add Battery Diagnostic cluster
     esp_zb_power_config_cluster_cfg_t power_cfg = {
-            .main_voltage = 36,
+            .main_voltage = (uint16_t) (battery_voltage * 10),
             .main_voltage_min = 33,
             .main_voltage_max = 42
     };
-    uint16_t battery_voltage = 38;
+    uint16_t battery_voltage_measured = (uint16_t) (battery_voltage * 10);
+    uint16_t battery_quantity = 1;
+    uint16_t battery_percentage = (uint16_t) (calculate_battery_percentage(battery_voltage) * 2);
+    uint16_t battery_size = ESP_ZB_ZCL_POWER_CONFIG_BATTERY_SIZE_BUILT_IN;
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_power_config_cluster_create(&power_cfg);
     ESP_ERROR_CHECK(
             esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID,
-                                                 &battery_voltage));
+                                                 &battery_voltage_measured));
+    ESP_ERROR_CHECK(
+            esp_zb_power_config_cluster_add_attr(power_config_cluster,
+                                                 ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID,
+                                                 &battery_percentage));
+    ESP_ERROR_CHECK(
+            esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_QUANTITY_ID,
+                                                 &battery_quantity));
+    ESP_ERROR_CHECK(
+            esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_SIZE_ID,
+                                                 &battery_size));
     ESP_ERROR_CHECK(esp_zb_cluster_list_add_power_config_cluster(cluster_list, power_config_cluster,
                                                                  ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
     ESP_ERROR_CHECK(esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(
             &(sensor->identify_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
     ESP_ERROR_CHECK(esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(
             ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE));
-
-    //
 
     // Free allocated memory after use
     free(manufacturer_name);
@@ -219,6 +264,7 @@ static void sensor_zb_task(void *pvParameters) {
 
     /* Initialize Zigbee stack */
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
+    esp_zb_sleep_enable(true);
     esp_zb_init(&zb_nwk_cfg);
 
     /* Create customized temperature sensor endpoint */
@@ -236,7 +282,59 @@ static void sensor_zb_task(void *pvParameters) {
     /* Register the device */
     esp_zb_device_register(esp_zb_sensor_ep);
 
+    // Create reporting info for temperature
+    esp_zb_zcl_reporting_info_t temperature_reporting_info = {
+            .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+            .ep = HA_ESP_SENSOR_ENDPOINT,
+            .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
+            .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+            .u.send_info.min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.def_min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.def_max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.delta.u16 = 10,
+            .attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
+            .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
+    };
+
+    // Create reporting info for humidity
+    esp_zb_zcl_reporting_info_t humidity_reporting_info = {
+            .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+            .ep = HA_ESP_SENSOR_ENDPOINT,
+            .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,
+            .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+            .u.send_info.min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.def_min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.def_max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.delta.u16 = 10,
+            .attr_id = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
+            .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
+    };
+
+    // Create reporting info for pressure
+    esp_zb_zcl_reporting_info_t pressure_reporting_info = {
+            .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+            .ep = HA_ESP_SENSOR_ENDPOINT,
+            .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT,
+            .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+            .u.send_info.min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.def_min_interval = CONFIG_WAKEUP_TIME_SEC,
+            .u.send_info.def_max_interval = CONFIG_WAKEUP_TIME_SEC * 2,
+            .u.send_info.delta.u16 = 1,
+            .attr_id = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID,
+            .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
+    };
+
+    ESP_ERROR_CHECK(esp_zb_zcl_update_reporting_info(&temperature_reporting_info));
+    ESP_ERROR_CHECK(esp_zb_zcl_update_reporting_info(&humidity_reporting_info));
+    ESP_ERROR_CHECK(esp_zb_zcl_update_reporting_info(&pressure_reporting_info));
+
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
+
+    esp_zb_core_action_handler_register(zb_action_handler);
+
     ESP_ERROR_CHECK(esp_zb_start(false));
 
     esp_zb_stack_main_loop();
@@ -249,6 +347,51 @@ static void zb_deep_sleep_init(void) {
     };
 
     ESP_ERROR_CHECK(esp_timer_create(&s_oneshot_timer_args, &s_oneshot_timer));
+
+    int wakeup_time_sec = CONFIG_WAKEUP_TIME_SEC;
+
+    if (wakeup_time_sec < 5 || wakeup_time_sec > 86400) {
+        ESP_LOGW(TAG, "Invalid WAKEUP_TIME_SEC: %d. Using default 300 seconds.", wakeup_time_sec);
+        wakeup_time_sec = 300;
+    }
+
+    ESP_LOGI(TAG, "Enabling timer wakeup, %ds\n", wakeup_time_sec);
+    ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000));
+}
+
+static void sensor_zb_update_task(void *arg) {
+    for (;;) {
+#ifndef CONFIG_SENSOR_NO_SENSOR
+        init_bme();
+        read_bme(&temperature, &humidity, &pressure);
+        deinit_bme();
+#endif
+        int16_t measured_temperature = zb_value_to_s16(temperature);
+        int16_t measured_humidity = zb_value_to_s16(humidity);
+        int16_t measured_pressure = (int16_t) (pressure);
+        uint16_t battery_voltage_measured = (uint16_t) (battery_voltage * 10);
+        uint16_t battery_percentage = (uint16_t) (calculate_battery_percentage(battery_voltage) * 2);
+
+        esp_zb_lock_acquire(portMAX_DELAY);
+//        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+//                                     ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+//                                     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &measured_temperature, false);
+//        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+//                                     ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+//                                     ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &measured_humidity, false);
+        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+                                     ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+                                     ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &measured_pressure, false);
+        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+                                     ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+                                     ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &battery_voltage_measured, false);
+        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+                                     ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+                                     ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &battery_percentage, false);
+        esp_zb_lock_release();
+
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_WAKEUP_TIME_SEC * 1000));
+    }
 }
 
 void start_zb(void) {
@@ -259,15 +402,16 @@ void start_zb(void) {
 }
 
 static void zb_deep_sleep_start(void) {
-    /* Start the one-shot timer */
-    int wakeup_time_sec = CONFIG_WAKEUP_TIME_SEC;
-
-    if (wakeup_time_sec < 5 || wakeup_time_sec > 86400) {
-        ESP_LOGW(TAG, "Invalid WAKEUP_TIME_SEC: %d. Using default 300 seconds.", wakeup_time_sec);
-        wakeup_time_sec = 300;
+    if (!go_sleep) {
+        go_sleep = true;
+    } else {
+        return;
     }
-    ESP_LOGI(TAG, "Start one-shot timer for %ds to enter the deep sleep", wakeup_time_sec);
-    ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, wakeup_time_sec * 1000000));
+
+    /* Start the one-shot timer */
+    const int before_deep_sleep_time_sec = 120;
+    ESP_LOGI(TAG, "Start one-shot timer for %ds to enter the deep sleep", before_deep_sleep_time_sec);
+    ESP_ERROR_CHECK(esp_timer_start_once(s_oneshot_timer, before_deep_sleep_time_sec * 1000000));
 }
 
 static char *build_zcl_string(const char *input_string) {
@@ -292,4 +436,30 @@ static char *build_zcl_string(const char *input_string) {
     memcpy(&zcl_string[1], input_string, len);
 
     return zcl_string;
+}
+
+double calculate_battery_percentage(double voltage) {
+    if (voltage >= 4.2) {
+        return 100.0;
+    } else if (voltage >= 4.1) {
+        return 90 + (voltage - 4.1) * 100;  // Linear between 4.1V and 4.2V
+    } else if (voltage >= 4.0) {
+        return 80 + (voltage - 4.0) * 100;
+    } else if (voltage >= 3.9) {
+        return 70 + (voltage - 3.9) * 100;
+    } else if (voltage >= 3.8) {
+        return 60 + (voltage - 3.8) * 100;
+    } else if (voltage >= 3.7) {
+        return 50 + (voltage - 3.7) * 100;
+    } else if (voltage >= 3.6) {
+        return 40 + (voltage - 3.6) * 100;
+    } else if (voltage >= 3.5) {
+        return 30 + (voltage - 3.5) * 100;
+    } else if (voltage >= 3.4) {
+        return 20 + (voltage - 3.4) * 100;
+    } else if (voltage >= 3.3) {
+        return 10 + (voltage - 3.3) * 100;
+    } else {
+        return 0.0;
+    }
 }

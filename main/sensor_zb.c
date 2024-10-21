@@ -360,6 +360,8 @@ static void zb_deep_sleep_init(void) {
 }
 
 static void sensor_zb_update_task(void *arg) {
+    esp_zb_zcl_status_t status;
+    vTaskDelay(pdMS_TO_TICKS(1000));
     for (;;) {
 #ifndef CONFIG_SENSOR_NO_SENSOR
         init_bme();
@@ -373,22 +375,49 @@ static void sensor_zb_update_task(void *arg) {
         uint16_t battery_percentage = (uint16_t) (calculate_battery_percentage(battery_voltage) * 2);
 
         esp_zb_lock_acquire(portMAX_DELAY);
-//        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
-//                                     ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-//                                     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &measured_temperature, false);
-//        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
-//                                     ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-//                                     ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &measured_humidity, false);
-        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+        status = esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+                                     ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+                                     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &measured_temperature, false);
+        esp_zb_lock_release();
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+            ESP_LOGE(TAG, "Unable to set attr. Err 0x%x", status);
+        }
+
+        esp_zb_lock_acquire(portMAX_DELAY);
+        status = esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+                                     ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+                                     ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &measured_humidity, false);
+        esp_zb_lock_release();
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+            ESP_LOGE(TAG, "Unable to set attr. Err 0x%x", status);
+        }
+
+        esp_zb_lock_acquire(portMAX_DELAY);
+        status = esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
                                      ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
                                      ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &measured_pressure, false);
-        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+        esp_zb_lock_release();
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+            ESP_LOGE(TAG, "Unable to set attr. Err 0x%x", status);
+        }
+
+        esp_zb_lock_acquire(portMAX_DELAY);
+        status = esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
                                      ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
                                      ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &battery_voltage_measured, false);
-        esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
+        esp_zb_lock_release();
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+            ESP_LOGE(TAG, "Unable to set attr. Err 0x%x", status);
+        }
+
+        esp_zb_lock_acquire(portMAX_DELAY);
+        status = esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
                                      ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
                                      ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &battery_percentage, false);
         esp_zb_lock_release();
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+            ESP_LOGE(TAG, "Unable to set attr. Err 0x%x", status);
+        }
 
         vTaskDelay(pdMS_TO_TICKS(CONFIG_WAKEUP_TIME_SEC * 1000));
     }

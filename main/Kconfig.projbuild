@@ -1,6 +1,25 @@
 menu "XIAO Sensor Configuration"
+    choice SENSOR_CONNECTION_TYPE
+        prompt "Select Sensor Connection Type"
+        default SENSOR_CONNECTION_WIFI_MQTT
+        help
+            Choose the type of sensor connection to use.
+            - **WiFi + MQTT**: WiFi and MQTT.
+            - **ZigBee**: ZigBee.
 
+        config SENSOR_CONNECTION_WIFI_MQTT
+            bool "WiFi + MQTT"
+            help
+                Enable WiFi and MQTT connection.
+
+        config SENSOR_CONNECTION_ZIGBEE
+            bool "ZigBee"
+            help
+                Enable ZigBee connection.
+
+    endchoice
     menu "Wi-Fi Configuration"
+        depends on SENSOR_CONNECTION_WIFI_MQTT
         config ESP_WIFI_SSID
             string "WiFi SSID"
             default "myssid"
@@ -112,6 +131,7 @@ menu "XIAO Sensor Configuration"
     endmenu
 
     menu "MQTT Configuration"
+        depends on SENSOR_CONNECTION_WIFI_MQTT
         config MQTT_BROKER_URI
             string "MQTT Broker URI"
             default "mqtt://192.168.1.100"
@@ -130,7 +150,7 @@ menu "XIAO Sensor Configuration"
             help
                 MQTT topic for publishing sensor data.
 
-        config MQTT_SENSOR_ID
+        config SENSOR_ID
             string "Sensor ID"
             default "7i29r9k9ltaxmbev"
             help
@@ -139,7 +159,7 @@ menu "XIAO Sensor Configuration"
                 This ID is used to construct MQTT topics for publishing data.
 
                 **Example:**
-                If `MQTT_TOPIC` is set to "xiao/sensor" and `MQTT_SENSOR_ID` is "7i29r9k9ltaxmbev",
+                If `MQTT_TOPIC` is set to "xiao/sensor" and `SENSOR_ID` is "7i29r9k9ltaxmbev",
                 the resulting MQTT topic for data will be:
                 `xiao/sensor/7i29r9k9ltaxmbev/data`
 
@@ -200,6 +220,19 @@ menu "XIAO Sensor Configuration"
             default "password"
             help
                 Password for authenticating with the MQTT broker.
+    endmenu
+
+    menu "ZigBee Configuration"
+        depends on SENSOR_CONNECTION_ZIGBEE
+        config SENSOR_ID
+            string "Sensor ID"
+            default "7i29r9k9ltaxmbev"
+            help
+                Unique identifier for the sensor.
+        config ZIGBEE_ANTENNA_EXTERNAL
+            bool "External Antenna"
+            help
+                Use an external antenna for ZigBee connectivity.
     endmenu
 
     # Sensor Type Selection

@@ -15,7 +15,7 @@
 #define HIGH 1
 
 void init_gpio(void) {
-#ifdef CONFIG_WIFI_ANTENNA_EXTERNAL
+#if defined(CONFIG_WIFI_ANTENNA_EXTERNAL) || defined(CONFIG_ZIGBEE_ANTENNA_EXTERNAL)
     gpio_reset_pin(GPIO_NUM_3);
     gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
     gpio_set_level(GPIO_NUM_3, LOW);

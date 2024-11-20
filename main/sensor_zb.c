@@ -281,7 +281,7 @@ void s_oneshot_timer_callback(void *arg) {
   esp_deep_sleep_start();
 }
 
-static void sensor_zb_task(void *pvParameters) {
+void sensor_zb_task(void *pvParameters) {
   const esp_timer_create_args_t s_oneshot_timer_args = {
       .callback = &s_oneshot_timer_callback, .name = "one-shot"};
 

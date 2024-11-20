@@ -1,7 +1,7 @@
 /**
- * @file    sensor_id.h
+ * @file    sensor_sleep.h
  * @author  Alexander Begoon <alex@begoonlab.tech>
- * @date    20 November 2024
+ * @date    13 December 2024
  * @brief   //TODO
  *
  * @details //TODO
@@ -13,11 +13,7 @@
 #pragma once
 
 #include "esp_log.h"
-#include "esp_mac.h"
-#include <string.h>
+#include "esp_sleep.h"
 
-#define SENSOR_ID_MAX_LEN 18 // "0x" + 12 hex digits + null terminator
-
-extern char sensor_id[SENSOR_ID_MAX_LEN];
-
-void resolve_sensor_id(void);
+void go_sleep(void);
+void go_sleep_for(uint64_t time_in_us);

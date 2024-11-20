@@ -239,98 +239,120 @@ menu "XIAO Sensor Configuration"
                 Use an external antenna for ZigBee connectivity.
     endmenu
 
-    # Sensor Type Selection
-    choice SENSOR_TYPE
-        prompt "Select Sensor Type"
-        default SENSOR_NO_SENSOR
-        help
-            Choose the type of sensor to use for environmental measurements.
-            - **No Sensor**: Disable sensor functionalities.
-            - **BME280**: Enable configuration for the BME280 sensor.
-            - **BME680**: Enable configuration for the BME680 sensor.
-
-        config SENSOR_NO_SENSOR
-            bool "No Sensor"
+    menu "Sensor Configuration"
+        config SENSOR_BME680
+            bool "BME680"
+            default n
             help
-                Do not enable any sensor-related configurations.
+                Enable configuration for the BME680 sensor.
+
+        menu "BME680 Configuration"
+            depends on SENSOR_BME680
+
+            config BME680_POWER_PIN
+                int "BME680 Power Pin"
+                default 21
+                help
+                    GPIO pin used to power up and down the BME680 sensor.
+
+            config BME680_I2C_ADDR
+                hex "BME680 I2C Address"
+                default 0x77
+                help
+                    I2C address of the BME680 sensor.
+
+            config BME680_I2C_PORT
+                int "BME680 I2C Port"
+                default 0
+                help
+                    I2C port number to which the BME680 sensor is connected.
+
+            config BME680_I2C_SDA
+                int "BME680 I2C SDA Pin"
+                default 22
+                help
+                    GPIO pin used for I2C SDA (data) line for the BME680 sensor.
+
+            config BME680_I2C_SCL
+                int "BME680 I2C SCL Pin"
+                default 23
+                help
+                    GPIO pin used for I2C SCL (clock) line for the BME680 sensor.
+        endmenu
 
         config SENSOR_BME280
             bool "BME280"
+            default n
             help
                 Enable configuration for the BME280 sensor.
 
-        config SENSOR_BME680
-            bool "BME680"
+        menu "BME280 Configuration"
+            depends on SENSOR_BME280
+
+            config BME280_POWER_PIN
+                int "BME280 Power Pin"
+                default 21
+                help
+                    GPIO pin used to power up and down the BME280 sensor.
+
+            config BME280_I2C_ADDR
+                hex "BME280 I2C Address"
+                default 0x76
+                help
+                    I2C address of the BME280 sensor.
+
+            config BME280_I2C_PORT
+                int "BME280 I2C Port"
+                default 0
+                help
+                    I2C port number to which the BME280 sensor is connected.
+
+            config BME280_I2C_SDA
+                int "BME280 I2C SDA Pin"
+                default 22
+                help
+                    GPIO pin used for I2C SDA (data) line for the BME280 sensor.
+
+            config BME280_I2C_SCL
+                int "BME280 I2C SCL Pin"
+                default 23
+                help
+                    GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
+        endmenu
+
+        config SENSOR_SGP41
+            bool "SGP41"
+            default n
             help
-                Enable configuration for the BME680 sensor.
-    endchoice
+                Enable configuration for the SGP41 sensor.
 
-    menu "BME680 Configuration"
-        depends on SENSOR_BME680
+        menu "SGP41 Configuration"
+            depends on SENSOR_SGP41
 
-        config BME680_POWER_PIN
-            int "BME680 Power Pin"
-            default 21
-            help
-                GPIO pin used to power up and down the BME680 sensor.
+            config SGP41_I2C_ADDR
+                hex "SGP41 I2C Address"
+                default 0x59
+                help
+                    I2C address of the SGP41 sensor.
 
-        config BME680_I2C_ADDR
-            hex "BME680 I2C Address"
-            default 0x77
-            help
-                I2C address of the BME680 sensor.
+            config SGP41_I2C_PORT
+                int "SGP41 I2C Port"
+                default 0
+                help
+                    I2C port number to which the SGP41 sensor is connected.
 
-        config BME680_I2C_PORT
-            int "BME680 I2C Port"
-            default 0
-            help
-                I2C port number to which the BME680 sensor is connected.
+            config SGP41_I2C_SDA
+                int "SGP41 I2C SDA Pin"
+                default 22
+                help
+                    GPIO pin used for I2C SDA (data) line for the SGP41 sensor.
 
-        config BME680_I2C_SDA
-            int "BME680 I2C SDA Pin"
-            default 22
-            help
-                GPIO pin used for I2C SDA (data) line for the BME680 sensor.
-
-        config BME680_I2C_SCL
-            int "BME680 I2C SCL Pin"
-            default 23
-            help
-                GPIO pin used for I2C SCL (clock) line for the BME680 sensor.
-    endmenu
-
-    menu "BME280 Configuration"
-        depends on SENSOR_BME280
-
-        config BME280_POWER_PIN
-            int "BME280 Power Pin"
-            default 21
-            help
-                GPIO pin used to power up and down the BME280 sensor.
-
-        config BME280_I2C_ADDR
-            hex "BME280 I2C Address"
-            default 0x76
-            help
-                I2C address of the BME280 sensor.
-
-        config BME280_I2C_PORT
-            int "BME280 I2C Port"
-            default 0
-            help
-                I2C port number to which the BME280 sensor is connected.
-
-        config BME280_I2C_SDA
-            int "BME280 I2C SDA Pin"
-            default 22
-            help
-                GPIO pin used for I2C SDA (data) line for the BME280 sensor.
-
-        config BME280_I2C_SCL
-            int "BME280 I2C SCL Pin"
-            default 23
-            help
-                GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
+            config SGP41_I2C_SCL
+                int "SGP41 I2C SCL Pin"
+                default 23
+                help
+                    GPIO pin used for I2C SCL (clock) line for the SGP41 sensor.
+        endmenu
     endmenu
 
     config ENABLE_BATTERY_CHECK

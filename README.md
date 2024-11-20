@@ -1,6 +1,6 @@
 # Smart IoT Sensor built with XIAO ESP32C6
 
-**Wi-Fi, MQTT, BME280/BME680 Integration & Power Management**
+**Wi-Fi, MQTT, BME280/BME680/SGP41 Integration & Power Management**
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 
 - **Wi-Fi Connectivity**: Seamless connection to your home or office network.
 - **MQTT Integration**: Publishes sensor data to an MQTT broker in JSON format.
-- **Environmental Sensing**: Supports [Bosch BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/) and [BME680](https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/) sensors for temperature, humidity, and pressure measurements.
+- **Environmental Sensing**: Supports [Bosch BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/) and [BME680](https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme680/) sensors for temperature, humidity, and pressure measurements. Supports [Sensirion SGP41](https://sensirion.com/products/catalog/SGP41) VOC and NOx sensor.
 - **Power Management**: Efficiently manages power using LiPo batteries with built-in charge management.
 - **Deep Sleep Mode**: Extends battery life by enabling deep sleep between data transmissions.
 - **ZigBee Connectivity**: Seamless integration with ZigBee networks. Supports standard ZigBee clusters, easily pair your sensor with ZigBee coordinators like Home Assistant.
@@ -86,6 +86,10 @@ _Voltage divider schematic (if battery voltage monitoring is required)._
 
 <img alt="SensorXIAO_connect_bme.png" src="assets/SensorXIAO_connect_bme.png" width="500"/>
 
+### SGP41 Connection
+
+<img alt="SensorXIAO_connect_SGP41.png" src="assets/SensorXIAO_connect_SGP41.png" width="500"/>
+
 ## Configuration
 
 This build was developed and tested with [ESP-IDF v5.3.1](https://github.com/espressif/esp-idf/releases/tag/v5.3.1)
@@ -102,7 +106,7 @@ Then go to `XIAO Sensor Configuration`
 1. **Wi-Fi Configuration**: Set up your Wi-Fi credentials to enable network connectivity.
 2. **MQTT Configuration**: Connect the sensor to your MQTT server by providing the necessary broker details.
 3. **Battery Check (Optional)**: Enable battery voltage monitoring if power management insights are needed.
-4. **BME Sensor Configuration (Optional)**: Choose between BME280 and BME680 sensors based on your requirements.
+4. **BME Sensor Configuration (Optional)**: Choose between BME280, BME680 and SGP41 sensors based on your requirements.
 5. **Power Management Configuration**: Set up wakeup duration, which is the duration in seconds that the device will remain in deep sleep before waking up.
 
 6. <img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
@@ -339,6 +343,8 @@ Build and flash the firmware. After that, the sensor will be ready and will begi
 To add the sensor to Home Assistant: go to `Settings` → `Devices & Services` → `Devices` → `Add Device` → `Add Zigbee device`. Once completed, your sensor will appear on the Devices page:
 
 <img alt="SensorXIAO_zb_device.png" src="assets/SensorXIAO_zb_device.png" width="500"/>
+
+_Note_: The SGP41 sensor is not currently supported because the ZigBee protocol does not include VOC and NOx clusters in its specification.
 
 ## Contributing
 

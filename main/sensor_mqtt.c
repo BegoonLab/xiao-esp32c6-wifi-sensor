@@ -11,20 +11,24 @@
  */
 
 #include "sensor_mqtt.h"
+
 #ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 
 static const char *TAG = "sensor_mqtt";
 
 static EventGroupHandle_t s_mqtt_event_group;
 
-#define MQTT_CONNECTED_BIT BIT0
-#define MQTT_PUBLISHED_BIT BIT1
-#define MQTT_DISCONNECTED_BIT BIT2
-
-#define WAIT pdMS_TO_TICKS(20000)
-
 volatile esp_mqtt_client_handle_t clientHandle;
 static char mqtt_topic_full[MQTT_TOPIC_MAX_LEN];
+
+extern double battery_voltage;
+extern float temperature;
+extern float humidity;
+extern float pressure;
+extern uint16_t sraw_voc;
+extern uint16_t sraw_nox;
+extern int32_t voc_index_value;
+extern int32_t nox_index_value;
 
 esp_mqtt_client_handle_t init_mqtt_client() {
   snprintf(mqtt_topic_full, sizeof(mqtt_topic_full), "%s/%s/data",
@@ -35,6 +39,7 @@ esp_mqtt_client_handle_t init_mqtt_client() {
   esp_mqtt_client_config_t mqtt_cfg = {
       .broker.address.uri = CONFIG_MQTT_BROKER_URI,
       .broker.address.port = CONFIG_MQTT_BROKER_PORT,
+      .session.disable_keepalive = true,
 #ifdef CONFIG_MQTT_ENABLE_AUTH
       .credentials.username = CONFIG_MQTT_USERNAME,
       .credentials.authentication.password = CONFIG_MQTT_PASSWORD,
@@ -42,6 +47,7 @@ esp_mqtt_client_handle_t init_mqtt_client() {
   };
 
   // Initialize MQTT client
+  ESP_LOGI(TAG, "Init MQTT client");
   clientHandle = esp_mqtt_client_init(&mqtt_cfg);
 
   // Register the event handler
@@ -54,49 +60,66 @@ esp_mqtt_client_handle_t init_mqtt_client() {
     ESP_LOGE(TAG, "Failed to start MQTT client (%s)", esp_err_to_name(ret));
   }
 
-  // Wait for connection
-  EventBits_t bits = xEventGroupWaitBits(s_mqtt_event_group, MQTT_CONNECTED_BIT,
-                                         pdFALSE, pdFALSE, WAIT);
+  for (int i = 0; i < 3; ++i) {
+    // Wait for connection
+    ESP_LOGI(TAG, "Wait for MQTT connection");
+    EventBits_t bits = xEventGroupWaitBits(
+        s_mqtt_event_group, MQTT_CONNECTED_BIT, pdFALSE, pdFALSE, WAIT);
 
-  if (bits & MQTT_CONNECTED_BIT) {
-    ESP_LOGI(TAG, "Connected to MQTT broker");
-    trigger_quick_blink();
-  } else {
-    ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    if (bits & MQTT_CONNECTED_BIT) {
+      ESP_LOGI(TAG, "Connected to MQTT broker");
+      trigger_quick_blink();
+      break;
+    }
+    ESP_LOGE(TAG, "MQTT connect failed");
+
     trigger_slow_blink();
-  }
 
-  xEventGroupClearBits(s_mqtt_event_group, bits);
+    xEventGroupClearBits(s_mqtt_event_group, bits);
+
+    esp_mqtt_client_reconnect(clientHandle);
+  }
 
   return clientHandle;
 }
 
 void mqtt_publish(esp_mqtt_client_handle_t client, const char *data) {
-  esp_err_t publish_ret = esp_mqtt_client_publish(
-      client, mqtt_topic_full, data, 0, CONFIG_MQTT_QOS, CONFIG_MQTT_RETAIN);
+  for (int i = 0; i < 3; ++i) {
+    esp_err_t publish_ret = esp_mqtt_client_publish(
+        client, mqtt_topic_full, data, 0, CONFIG_MQTT_QOS, CONFIG_MQTT_RETAIN);
 
-  if (publish_ret <= 0) {
-    ESP_LOGE(TAG, "Failed to publish message (%s)",
-             esp_err_to_name(publish_ret));
+    if (publish_ret <= 0) {
+      ESP_LOGE(TAG, "Failed to publish message (%s)",
+               esp_err_to_name(publish_ret));
+    }
+
+    // Wait for published bit
+    EventBits_t bits = xEventGroupWaitBits(
+        s_mqtt_event_group, MQTT_PUBLISHED_BIT, pdFALSE, pdFALSE, WAIT);
+
+    if (bits & MQTT_PUBLISHED_BIT) {
+      trigger_quick_blink();
+      break;
+    }
+
+    trigger_slow_blink();
+
+    xEventGroupClearBits(s_mqtt_event_group, bits);
   }
-
-  // Wait for published bit
-  xEventGroupWaitBits(s_mqtt_event_group, MQTT_PUBLISHED_BIT, pdFALSE, pdFALSE,
-                      WAIT);
-
-  trigger_quick_blink();
 }
 
 void stop_mqtt(esp_mqtt_client_handle_t client) {
-  esp_mqtt_client_stop(client);
-  esp_mqtt_client_disconnect(client);
+  ESP_LOGI(TAG, "Stop MQTT client");
+  esp_err_t err = esp_mqtt_client_stop(client);
+  if (err) {
+    ESP_LOGE(TAG, "Failed to stop MQTT client: (%i)", err);
+    esp_mqtt_client_disconnect(client);
+  }
+  esp_mqtt_client_destroy(client);
 }
 
 void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                         int32_t event_id, void *event_data) {
-  esp_mqtt_event_handle_t event = event_data;
-  esp_mqtt_client_handle_t client = event->client;
-
   switch (event_id) {
   case MQTT_EVENT_CONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -118,8 +141,7 @@ void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   }
 }
 
-void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage,
-                       double temperature, double humidity, double pressure,
+void mqtt_prepare_json(char *json_string, int rssi,
                        struct timeval start_to_connect,
                        struct timeval end_to_connect) {
   // Create cJSON object
@@ -128,6 +150,7 @@ void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage,
   cJSON_AddNumberToObject(json, "RSSI", rssi);
   cJSON_AddNumberToObject(json, "battery_voltage", battery_voltage);
 
+#if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
   char temperature_str[16];
   snprintf(temperature_str, sizeof(temperature_str), "%.2f", temperature);
   cJSON_AddStringToObject(json, "temperature", temperature_str);
@@ -139,6 +162,14 @@ void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage,
   char pressure_str[16];
   snprintf(pressure_str, sizeof(pressure_str), "%.2f", pressure);
   cJSON_AddStringToObject(json, "pressure", pressure_str);
+#endif
+
+#if defined(CONFIG_SENSOR_SGP41)
+  cJSON_AddNumberToObject(json, "voc_raw", sraw_voc);
+  cJSON_AddNumberToObject(json, "nox_raw", sraw_nox);
+  cJSON_AddNumberToObject(json, "voc_index", voc_index_value);
+  cJSON_AddNumberToObject(json, "nox_index", nox_index_value);
+#endif
 
   cJSON_AddNumberToObject(
       json, "connection_duration_ms",
@@ -151,5 +182,36 @@ void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage,
   }
 
   cJSON_Delete(json);
+}
+
+void mqtt_send_sensor_data(void) {
+  struct timeval start_to_connect;
+  gettimeofday(&start_to_connect, NULL);
+  if (init_wifi_sta() == ESP_OK) {
+    esp_mqtt_client_handle_t mqtt_client = init_mqtt_client();
+
+    struct timeval end_to_connect;
+    gettimeofday(&end_to_connect, NULL);
+
+    int rssi = -100;
+    esp_wifi_sta_get_rssi(&rssi);
+    ESP_LOGI(TAG, "RSSI: %d", rssi);
+
+    char *json_string = (char *)malloc(MQTT_MSG_MAX_LEN * sizeof(char));
+    if (json_string == NULL) {
+      ESP_LOGE(TAG, "Failed to allocate memory for JSON string");
+    } else {
+      mqtt_prepare_json(json_string, rssi, start_to_connect, end_to_connect);
+
+      mqtt_publish(mqtt_client, json_string);
+
+      // Cleanup
+      free(json_string);
+    }
+
+    stop_mqtt(mqtt_client);
+  }
+
+  stop_wifi();
 }
 #endif

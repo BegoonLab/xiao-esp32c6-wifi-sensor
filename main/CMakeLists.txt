@@ -8,6 +8,20 @@ idf_component_register(
   "sensor_adc.c"
   "sensor_bme.c"
   "sensor_zb.c"
+  "sensor_id.c"
   "sensor_led.c"
+  "sensor_sgp.c"
+  "sensor_sleep.c"
+  "sensor_i2c.c"
+  "../vendor/embedded-i2c-sgp41/sgp41_i2c.c"
+  "../vendor/embedded-i2c-sgp41/sensirion_i2c.c"
+  "../vendor/embedded-i2c-sgp41/sensirion_common.c"
+  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm/sensirion_gas_index_algorithm.c"
+  "../vendor/boschsensortec/BME280_SensorAPI/bme280.c"
+  "../vendor/boschsensortec/BME68x_SensorAPI/bme68x.c"
   INCLUDE_DIRS
-  ".")
+  "."
+  "../vendor/embedded-i2c-sgp41"
+  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
+  "../vendor/boschsensortec/BME280_SensorAPI"
+  "../vendor/boschsensortec/BME68x_SensorAPI")

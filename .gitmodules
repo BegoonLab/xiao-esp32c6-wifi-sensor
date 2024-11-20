@@ -1,9 +1,12 @@
-[submodule "vendor/esp-idf-lib"]
-	path = vendor/esp-idf-lib
-	url = https://github.com/UncleRus/esp-idf-lib.git
 [submodule "vendor/embedded-i2c-sgp41"]
 	path = vendor/embedded-i2c-sgp41
 	url = https://github.com/Sensirion/embedded-i2c-sgp41.git
 [submodule "vendor/gas-index-algorithm"]
 	path = vendor/gas-index-algorithm
 	url = https://github.com/Sensirion/gas-index-algorithm.git
+[submodule "vendor/boschsensortec/BME280_SensorAPI"]
+	path = vendor/boschsensortec/BME280_SensorAPI
+	url = https://github.com/boschsensortec/BME280_SensorAPI
+[submodule "vendor/boschsensortec/BME68x_SensorAPI"]
+	path = vendor/boschsensortec/BME68x_SensorAPI
+	url = https://github.com/boschsensortec/BME68x_SensorAPI

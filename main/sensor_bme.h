@@ -1,11 +1,11 @@
 /**
  * @file    sensor_bme.h
- * @author  Alexander Begoon (<a href="mailto:alex\@begoonlab.tech">alex\@begoonlab.tech</a>)
+ * @author  Alexander Begoon <alex@begoonlab.tech>
  * @date    30 September 2024
  * @brief   //TODO
- * 
+ *
  * @details //TODO
- * 
+ *
  * @copyright Copyright (c) 2024 <a href="https://begoonlab.tech">BegoonLab</a>.
  *            All rights reserved.
  */
@@ -13,11 +13,11 @@
 #pragma once
 
 #ifndef CONFIG_SENSOR_NO_SENSOR
-#include "esp_rom_gpio.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "memory.h"
+#include "esp_rom_gpio.h"
 #include "math.h"
+#include "memory.h"
 #endif
 
 #ifdef CONFIG_SENSOR_BME680

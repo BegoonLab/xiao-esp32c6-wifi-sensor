@@ -19,6 +19,7 @@ cmake-build-*/
 /build/
 cmake-*
 /sdkconfig.old
+/sdkconfig.temp
 /sdkconfig
 dependencies.lock
 managed_components

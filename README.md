@@ -34,9 +34,9 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 - **Deep Sleep Mode**: Extends battery life by enabling deep sleep between data transmissions.
 - **ZigBee Connectivity**: Seamless integration with ZigBee networks. Supports standard ZigBee clusters, easily pair your sensor with ZigBee coordinators like Home Assistant.
 - **Optional Features**:
-    - Battery voltage monitoring
-    - Connection duration tracking
-    - Future support for Wi-Fi 6 and Bluetooth provisioning (TODO)
+  - Battery voltage monitoring
+  - Connection duration tracking
+  - Future support for Wi-Fi 6 and Bluetooth provisioning (TODO)
 
 ## Usage
 
@@ -45,6 +45,7 @@ The Smart IoT Sensor can be easily integrated with [Home Assistant](https://www.
 ### MQTT Data Structure
 
 The sensor publishes data to an MQTT broker in the following JSON format:
+
 ```json
 {
   "ID": "7i29r9k9ltaxmbev",
@@ -56,6 +57,7 @@ The sensor publishes data to an MQTT broker in the following JSON format:
   "connection_duration_ms": 1672
 }
 ```
+
 - **ID**: Unique identifier of the sensor
 - **RSSI**: Wi-Fi signal strength in dBm
 - **battery_voltage**: Current battery voltage
@@ -67,14 +69,16 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 ## Schematics
 
 ### Battery Connection
+
 <img alt="SensorXIAO_battery_connection.png" src="assets/SensorXIAO_battery_connection.png" width="500"/>
 
-*A battery connection schematic.*
+_A battery connection schematic._
 
 ### Voltage Divider
+
 <img alt="SensorXIAO_voltage_divider.png" src="assets/SensorXIAO_voltage_divider.png" width="500"/>
 
-*Voltage divider schematic (if battery voltage monitoring is required).*
+_Voltage divider schematic (if battery voltage monitoring is required)._
 
 **Note:** This solution continuously consumes some current from the battery but is functional for voltage monitoring.
 
@@ -101,7 +105,7 @@ Then go to `XIAO Sensor Configuration`
 4. **BME Sensor Configuration (Optional)**: Choose between BME280 and BME680 sensors based on your requirements.
 5. **Power Management Configuration**: Set up wakeup duration, which is the duration in seconds that the device will remain in deep sleep before waking up.
 
-5. <img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
+6. <img alt="SensorXIAO_menu.png" src="assets/SensorXIAO_menu.png" width="500"/>
 
 ## Enclosure
 
@@ -116,6 +120,7 @@ When printing, it is recommended to orient the parts on the hotbed as shown in t
 <img alt="printing_setup_1.png" src="3d/enclosure/printing_setup_1.png" width="500"/>
 
 Enclosure assembly steps:
+
 1. Insert XIAO board into [SoC_holder](3d/enclosure/stl/soc_holder.stl) :
 
 <img alt="SensorXIAO_assemby_0.jpg" src="assets/SensorXIAO_assemby_0.jpg" width="500"/>
@@ -162,8 +167,8 @@ Integrate the Smart IoT Sensor with Home Assistant by following these steps:
 2. **Configure `configuration.yaml`**: Add the following configuration to your `configuration.yaml` file to define the sensor entities.
 
 ```yaml
-...
-mqtt:  
+---
+mqtt:
   sensor:
     - name: "Sensor RSSI 7i29r9k9ltaxmbev"
       device_class: signal_strength
@@ -182,7 +187,7 @@ mqtt:
       state_topic: "xiao/sensor/7i29r9k9ltaxmbev/data"
       unit_of_measurement: "%"
       value_template: "{{ value_json.humidity }}"
-      
+
     - name: "Sensor Pressure 7i29r9k9ltaxmbev"
       device_class: pressure
       state_topic: "xiao/sensor/7i29r9k9ltaxmbev/data"
@@ -200,12 +205,13 @@ mqtt:
       state_topic: "xiao/sensor/7i29r9k9ltaxmbev/data"
       unit_of_measurement: "ms"
       value_template: "{{ value_json.connection_duration_ms }}"
-...
 ```
+
 3. **Restart Home Assistant**: After updating the configuration, restart Home Assistant to apply the changes.
 4. **Configure Entity Card**: Here is an example configuration for the entity card:
+
 ```yaml
-...
+---
 type: entities
 entities:
   - entity: sensor.sensor_temperature_7i29r9k9ltaxmbev
@@ -227,7 +233,6 @@ entities:
   - entity: sensor.sensor_connection_duration_7i29r9k9ltaxmbev
     name: Connection Duration
 title: Sensor 7i29r9k9ltaxmbev
-...
 ```
 
 <img alt="SensorXIAO_ha_card.png" src="assets/SensorXIAO_ha_card.png" width="500"/>
@@ -238,11 +243,11 @@ Follow these steps to set up your Smart IoT Sensor:
 
 1. **Clone the Repository**
 
-    ```bash
-    git clone https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
-    cd xiao-esp32c6-wifi-sensor
-    git submodule update --init --recursive
-    ```
+   ```bash
+   git clone https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
+   cd xiao-esp32c6-wifi-sensor
+   git submodule update --init --recursive
+   ```
 
 2. **Install Dependencies**
 
@@ -276,10 +281,11 @@ Follow these steps to set up your Smart IoT Sensor:
   - Connectors and cables
   - External antenna (optional, but highly recommended for weak Wi-Fi signals). This is RSSI without and then with external antenna: ![SensorXIAO_rssi_antenna.png](assets/SensorXIAO_rssi_antenna.png)
     - These antennas tested and worked quite well with this build:
-    - PCB Antenna 5dBi and U.FL connector 
+    - PCB Antenna 5dBi and U.FL connector
     - <img alt="SensorXIAO_external_antenna.jpg" src="assets/SensorXIAO_external_antenna.jpg" width="500"/>
-    - RadioMaster FPV Drone antenna 
+    - RadioMaster FPV Drone antenna
     - <img alt="SensorXIAO_external_antenna_radiomaster.png" src="assets/SensorXIAO_external_antenna_radiomaster.png" width="500"/>
+
 ### Assembly Instructions
 
 1. **Mount the Sensor**: Connect the BME280/BME680 to the XIAO ESP32C6.
@@ -291,7 +297,7 @@ Follow these steps to set up your Smart IoT Sensor:
 
 ### Dependencies
 
-- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html#software) for Espressif chips. 
+- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html#software) for Espressif chips.
 
 ### Building the Firmware
 
@@ -301,25 +307,29 @@ Follow these steps to set up your Smart IoT Sensor:
 
 2. **Configure the Project**
 
-    ```bash
-    idf.py menuconfig
-    ```
+   ```bash
+   idf.py menuconfig
+   ```
+
    - Set Wi-Fi credentials
    - Configure MQTT broker details
    - Enable or disable optional features
 
 3. **Build and Flash**
 
-    ```bash
-    idf.py build
-    idf.py -p <TARGET_PORT> flash
-    ```
+   ```bash
+   idf.py build
+   idf.py -p <TARGET_PORT> flash
+   ```
 
 ## ZigBee
+
 ZigBee can be activated in the menu:
+
 ```bash
 idf.py menuconfig
 ```
+
 Navigate to `XIAO Sensor Configuration` → `Select Sensor Connection Type` → `ZigBee`.
 
 Next, go to `Component config` → `Zigbee` → `Zigbee Enable` and set it to ON. Then, go to `XIAO Sensor Configuration` → `ZigBee Configuration` and set a `Sensor ID`.
@@ -337,16 +347,16 @@ Contributions are welcome! Please follow these steps:
 1. **Fork the Repository**
 2. **Create a Feature Branch**
 
-    ```bash
-    git checkout -b feature/YourFeature
-    ```
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
 
 3. **Commit Your Changes**
 4. **Push to the Branch**
 
-    ```bash
-    git push origin feature/YourFeature
-    ```
+   ```bash
+   git push origin feature/YourFeature
+   ```
 
 5. **Open a Pull Request**
 
@@ -359,4 +369,3 @@ This project is licensed under the [MIT License](LICENSE). All rights reserved.
 - **Wi-Fi 6 Support**: Enhance connectivity options with Wi-Fi 6.
 - **Bluetooth Provisioning**: Implement Bluetooth-based provisioning for easier setup.
 - **Additional Sensor Support**: Expand compatibility with other types of sensors.
-

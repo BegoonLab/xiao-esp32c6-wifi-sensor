@@ -1,19 +1,19 @@
 /**
  * @file    sensor_wifi.h
- * @author  Alexander Begoon (<a href="mailto:alex\@begoonlab.tech">alex\@begoonlab.tech</a>)
+ * @author  Alexander Begoon <alex@begoonlab.tech>
  * @date    27 September 2024
  * @brief   //TODO
  *
  * @details //TODO
- * 
+ *
  * @copyright Copyright (c) 2024 <a href="https://begoonlab.tech">BegoonLab</a>.
  *            All rights reserved.
  */
 
 #pragma once
 
-#include "esp_wifi.h"
 #include "esp_log.h"
+#include "esp_wifi.h"
 #include "freertos/event_groups.h"
 
 #if CONFIG_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
@@ -45,5 +45,6 @@
 #endif
 
 void init_wifi_sta(void);
-void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
+                   void *event_data);
 void stop_wifi(void);

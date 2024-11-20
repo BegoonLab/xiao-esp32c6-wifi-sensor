@@ -15,6 +15,7 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "freertos/event_groups.h"
+#include "sensor_led.h"
 
 #if CONFIG_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
 #define ESP_WIFI_SAE_MODE WPA3_SAE_PWE_HUNT_AND_PECK

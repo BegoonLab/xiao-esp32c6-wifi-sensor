@@ -10,8 +10,8 @@
  *            All rights reserved.
  */
 
-#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 #include "sensor_mqtt.h"
+#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 
 static const char *TAG = "sensor_mqtt";
 
@@ -28,7 +28,7 @@ static char mqtt_topic_full[MQTT_TOPIC_MAX_LEN];
 
 esp_mqtt_client_handle_t init_mqtt_client() {
   snprintf(mqtt_topic_full, sizeof(mqtt_topic_full), "%s/%s/data",
-           CONFIG_MQTT_TOPIC, CONFIG_SENSOR_ID);
+           CONFIG_MQTT_TOPIC, sensor_id);
 
   s_mqtt_event_group = xEventGroupCreate();
 
@@ -60,8 +60,10 @@ esp_mqtt_client_handle_t init_mqtt_client() {
 
   if (bits & MQTT_CONNECTED_BIT) {
     ESP_LOGI(TAG, "Connected to MQTT broker");
+    trigger_quick_blink();
   } else {
     ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    trigger_slow_blink();
   }
 
   xEventGroupClearBits(s_mqtt_event_group, bits);
@@ -81,6 +83,8 @@ void mqtt_publish(esp_mqtt_client_handle_t client, const char *data) {
   // Wait for published bit
   xEventGroupWaitBits(s_mqtt_event_group, MQTT_PUBLISHED_BIT, pdFALSE, pdFALSE,
                       WAIT);
+
+  trigger_quick_blink();
 }
 
 void stop_mqtt(esp_mqtt_client_handle_t client) {
@@ -120,7 +124,7 @@ void mqtt_prepare_json(char *json_string, int rssi, double battery_voltage,
                        struct timeval end_to_connect) {
   // Create cJSON object
   cJSON *json = cJSON_CreateObject();
-  cJSON_AddStringToObject(json, "ID", CONFIG_SENSOR_ID);
+  cJSON_AddStringToObject(json, "ID", sensor_id);
   cJSON_AddNumberToObject(json, "RSSI", rssi);
   cJSON_AddNumberToObject(json, "battery_voltage", battery_voltage);
 

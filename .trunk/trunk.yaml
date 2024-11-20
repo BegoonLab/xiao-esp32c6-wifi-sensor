@@ -31,6 +31,14 @@ lint:
     - ruff@0.7.3
     - trufflehog@3.83.7
     - yamllint@1.35.1
+  ignore:
+    - linters: [ALL]
+      paths:
+        - managed_components/**
+        - build/**
+        - venv/**
+        - cmake-*/**
+        - vendor/**
 actions:
   enabled:
     - trunk-announce

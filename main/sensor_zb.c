@@ -11,6 +11,7 @@
  */
 
 #include "sensor_zb.h"
+#ifdef CONFIG_SENSOR_CONNECTION_ZIGBEE
 
 static const char *TAG = "sensor_zigbee";
 static esp_timer_handle_t s_oneshot_timer;
@@ -31,7 +32,7 @@ void init_zb(void) {
   ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 }
 
-static int16_t zb_value_to_s16(float value) { return (int16_t)(value * 100); }
+int16_t zb_value_to_s16(float value) { return (int16_t)(value * 100); }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
   ESP_RETURN_ON_FALSE(esp_zb_bdb_start_top_level_commissioning(mode_mask) ==
@@ -87,7 +88,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   uint32_t *p_sg_p = signal_struct->p_app_signal;
   esp_err_t err_status = signal_struct->esp_err_status;
   esp_zb_app_signal_type_t sig_type = *p_sg_p;
-  int before_deep_sleep_time_sec = 5;
+  int before_deep_sleep_time_sec = 3;
   switch (sig_type) {
   case ESP_ZB_ZDO_SIGNAL_LEAVE:
     ESP_LOGI(TAG, "ZDO signal: Leave");
@@ -98,7 +99,8 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_INITIALIZATION);
     break;
   case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
-    before_deep_sleep_time_sec = 120; // Wait 2 min to join a Zigbee network
+    // Wait 2 min to join a Zigbee network
+    before_deep_sleep_time_sec = 120;
   case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
     if (err_status == ESP_OK) {
       trigger_breath_effect();
@@ -157,10 +159,11 @@ static esp_zb_cluster_list_t *
 custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
   char *manufacturer_name = build_zcl_string(MANUFACTURER_NAME);
   char *model_identifier = build_zcl_string(CONFIG_IDF_TARGET);
-  char *sensor_id = build_zcl_string(CONFIG_SENSOR_ID);
+  char *sensor_id_identifier = build_zcl_string(sensor_id);
   char *version = build_zcl_string(GIT_COMMIT_HASH);
 
-  if (!manufacturer_name || !model_identifier || !sensor_id || !version) {
+  if (!manufacturer_name || !model_identifier || !sensor_id_identifier ||
+      !version) {
     ESP_LOGE(TAG, "Failed to build ZCL strings.");
     return NULL;
   }
@@ -175,7 +178,8 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
       basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID,
       manufacturer_name));
   ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(
-      basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_SERIAL_NUMBER_ID, sensor_id));
+      basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_SERIAL_NUMBER_ID,
+      sensor_id_identifier));
   ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(
       basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID,
       model_identifier));
@@ -250,14 +254,14 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
 
   // Free allocated memory after use
   free(manufacturer_name);
-  free(sensor_id);
+  free(sensor_id_identifier);
   free(model_identifier);
   free(version);
 
   return cluster_list;
 }
 
-static esp_zb_ep_list_t *
+esp_zb_ep_list_t *
 custom_sensor_ep_create(uint8_t endpoint_id,
                         esp_zb_configuration_tool_cfg_t *sensor) {
   esp_zb_ep_list_t *ep_list = esp_zb_ep_list_create();
@@ -271,7 +275,7 @@ custom_sensor_ep_create(uint8_t endpoint_id,
   return ep_list;
 }
 
-static void s_oneshot_timer_callback(void *arg) {
+void s_oneshot_timer_callback(void *arg) {
   /* Enter deep sleep */
   ESP_LOGI(TAG, "Enter deep sleep");
   esp_deep_sleep_start();
@@ -373,7 +377,7 @@ void sensor_zb_update_reporting_info(void) {
   esp_zb_lock_release();
 }
 
-static void zb_deep_sleep_init(void) {
+void zb_deep_sleep_init(void) {
   const esp_timer_create_args_t s_oneshot_timer_args = {
       .callback = &s_oneshot_timer_callback, .name = "one-shot"};
 
@@ -461,7 +465,7 @@ void start_zb(void) {
   xTaskCreate(sensor_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
 }
 
-static void zb_deep_sleep_start(int before_deep_sleep_time_sec) {
+void zb_deep_sleep_start(int before_deep_sleep_time_sec) {
   if (!go_sleep) {
     go_sleep = true;
   } else {
@@ -474,7 +478,7 @@ static void zb_deep_sleep_start(int before_deep_sleep_time_sec) {
                                        before_deep_sleep_time_sec * 1000000));
 }
 
-static char *build_zcl_string(const char *input_string) {
+char *build_zcl_string(const char *input_string) {
   size_t len = strlen(input_string);
 
   if (len > MAX_ZCL_STRING_LEN) {
@@ -523,3 +527,4 @@ double calculate_battery_percentage(double voltage) {
     return 0.0;
   }
 }
+#endif

@@ -10,8 +10,8 @@
  *            All rights reserved.
  */
 
-#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 #include "sensor_wifi.h"
+#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -35,8 +35,8 @@ void init_wifi_sta(void) {
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-  esp_event_handler_instance_t instance_any_id;
-  esp_event_handler_instance_t instance_got_ip;
+  esp_event_handler_instance_t instance_any_id = NULL;
+  esp_event_handler_instance_t instance_got_ip = NULL;
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
       WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
@@ -124,11 +124,13 @@ void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
       xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
     }
     ESP_LOGI(TAG, "connect to the AP fail");
+    trigger_slow_blink();
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
     s_retry_num = 0;
     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    trigger_quick_blink();
   }
 }
 #endif

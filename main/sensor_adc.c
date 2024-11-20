@@ -126,7 +126,7 @@ void deinit_adc(void) {
 }
 
 void get_battery_voltage(double *battery_voltage) {
-#ifdef ENABLE_BATTERY_CHECK
+#ifdef CONFIG_ENABLE_BATTERY_CHECK
   // Retrieve and convert the divider ratio
   double voltage_divider_ratio =
       CONFIG_BATTERY_VOLTAGE_DIVIDER_RATIO_INT / 100.0;

@@ -152,16 +152,18 @@ menu "XIAO Sensor Configuration"
 
         config SENSOR_ID
             string "Sensor ID"
-            default "7i29r9k9ltaxmbev"
+            default ""
             help
                 Unique identifier for the sensor.
+
+                If left empty, the device's MAC address will be used as the Sensor ID.
 
                 This ID is used to construct MQTT topics for publishing data.
 
                 **Example:**
-                If `MQTT_TOPIC` is set to "xiao/sensor" and `SENSOR_ID` is "7i29r9k9ltaxmbev",
+                If `MQTT_TOPIC` is set to "xiao/sensor" and `SENSOR_ID` is empty,
                 the resulting MQTT topic for data will be:
-                `xiao/sensor/7i29r9k9ltaxmbev/data`
+                `xiao/sensor/<MAC_ADDRESS>/data`
 
         choice MQTT_QOS
              prompt "MQTT Quality of Service"
@@ -226,9 +228,11 @@ menu "XIAO Sensor Configuration"
         depends on SENSOR_CONNECTION_ZIGBEE
         config SENSOR_ID
             string "Sensor ID"
-            default "7i29r9k9ltaxmbev"
+            default ""
             help
                 Unique identifier for the sensor.
+
+                If left empty, the device's MAC address will be used as the Sensor ID.
         config ZIGBEE_ANTENNA_EXTERNAL
             bool "External Antenna"
             help
@@ -294,6 +298,7 @@ menu "XIAO Sensor Configuration"
             help
                 GPIO pin used for I2C SCL (clock) line for the BME680 sensor.
     endmenu
+
     menu "BME280 Configuration"
         depends on SENSOR_BME280
 
@@ -327,6 +332,7 @@ menu "XIAO Sensor Configuration"
             help
                 GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
     endmenu
+
     config ENABLE_BATTERY_CHECK
         bool "Enable Battery Voltage Check"
         default n
@@ -350,6 +356,7 @@ menu "XIAO Sensor Configuration"
 
                 - **Usage:** In the code, divide this value by 100.0 to get the actual ratio.
     endmenu
+
     menu "Power Management Configuration"
         config WAKEUP_TIME_SEC
             int "Wakeup Time (seconds)"
@@ -360,6 +367,5 @@ menu "XIAO Sensor Configuration"
                 - **Default**: 300 seconds (5 minutes)
                 - **Usage**: Determines how long the device stays in deep sleep before it automatically wakes up.
                 - **Range**: 5 - 86400 (5 seconds to 24 hours)
-
     endmenu
 endmenu

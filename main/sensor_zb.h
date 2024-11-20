@@ -76,10 +76,6 @@
 #define ESP_ZB_DEFAULT_HOST_CONFIG()                                           \
   { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
 
-#if !defined(GIT_COMMIT_HASH)
-#error "GIT_COMMIT_HASH is missing"
-#endif
-
 void sensor_zb_task(void *pvParameters);
 
 void init_zb(void);

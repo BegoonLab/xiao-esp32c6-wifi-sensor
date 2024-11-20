@@ -1,6 +1,6 @@
 import os
-import time
 import subprocess
+import time
 
 DEVICE_PATH = "/dev/ttyACM0"
 CHECK_INTERVAL = 1  # Time in seconds between checks
@@ -8,7 +8,7 @@ CHECK_INTERVAL = 1  # Time in seconds between checks
 
 def send_notification(message):
     """Send a notification using notify-send."""
-    subprocess.run(['notify-send', 'Device Status', message], check=True)
+    subprocess.run(["notify-send", "Device Status", message], check=True)
 
 
 def monitor_device():

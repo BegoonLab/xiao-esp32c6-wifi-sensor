@@ -1,3 +1,9 @@
 [submodule "vendor/esp-idf-lib"]
 	path = vendor/esp-idf-lib
 	url = https://github.com/UncleRus/esp-idf-lib.git
+[submodule "vendor/embedded-i2c-sgp41"]
+	path = vendor/embedded-i2c-sgp41
+	url = https://github.com/Sensirion/embedded-i2c-sgp41.git
+[submodule "vendor/gas-index-algorithm"]
+	path = vendor/gas-index-algorithm
+	url = https://github.com/Sensirion/gas-index-algorithm.git

@@ -18,6 +18,10 @@
 #include "sensor_nvs.h"
 #include "sys/time.h"
 
+#if !defined(GIT_COMMIT_HASH)
+#error "GIT_COMMIT_HASH is missing"
+#endif
+
 #ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
 #include "esp_sleep.h"
 #include "sensor_mqtt.h"

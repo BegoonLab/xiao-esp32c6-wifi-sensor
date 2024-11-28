@@ -245,9 +245,6 @@ menu "XIAO Sensor Configuration"
         default SENSOR_NO_SENSOR
         help
             Choose the type of sensor to use for environmental measurements.
-            - **No Sensor**: Disable sensor functionalities.
-            - **BME280**: Enable configuration for the BME280 sensor.
-            - **BME680**: Enable configuration for the BME680 sensor.
 
         config SENSOR_NO_SENSOR
             bool "No Sensor"
@@ -263,6 +260,11 @@ menu "XIAO Sensor Configuration"
             bool "BME680"
             help
                 Enable configuration for the BME680 sensor.
+
+        config SENSOR_SGP41
+            bool "SGP41"
+            help
+                Enable configuration for the SGP41 sensor.
     endchoice
 
     menu "BME680 Configuration"
@@ -331,6 +333,40 @@ menu "XIAO Sensor Configuration"
             default 23
             help
                 GPIO pin used for I2C SCL (clock) line for the BME280 sensor.
+    endmenu
+
+    menu "SGP41 Configuration"
+        depends on SENSOR_SGP41
+
+        config SGP41_POWER_PIN
+            int "SGP41 Power Pin"
+            default 21
+            help
+                GPIO pin used to power up and down the SGP41 sensor.
+
+        config SGP41_I2C_ADDR
+            hex "SGP41 I2C Address"
+            default 0x59
+            help
+                I2C address of the SGP41 sensor.
+
+        config SGP41_I2C_PORT
+            int "SGP41 I2C Port"
+            default 0
+            help
+                I2C port number to which the SGP41 sensor is connected.
+
+        config SGP41_I2C_SDA
+            int "SGP41 I2C SDA Pin"
+            default 22
+            help
+                GPIO pin used for I2C SDA (data) line for the SGP41 sensor.
+
+        config SGP41_I2C_SCL
+            int "SGP41 I2C SCL Pin"
+            default 23
+            help
+                GPIO pin used for I2C SCL (clock) line for the SGP41 sensor.
     endmenu
 
     config ENABLE_BATTERY_CHECK

@@ -9,5 +9,8 @@ idf_component_register(
   "sensor_bme.c"
   "sensor_zb.c"
   "sensor_led.c"
+  "sensor_sgp.c"
+  "../vendor/embedded-i2c-sgp41/sgp41_i2c.c"
   INCLUDE_DIRS
-  ".")
+  "."
+  "../vendor/embedded-i2c-sgp41")

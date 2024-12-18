@@ -129,7 +129,7 @@ void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
     error = sgp41_turn_heater_off();
 
     if (error) {
-      printf("Error executing sgp41_turn_heater_off(): %i", error);
+      ESP_LOGE(TAG, "Error executing sgp41_turn_heater_off(): %i", error);
       continue;
     }
 

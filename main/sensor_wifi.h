@@ -45,7 +45,11 @@
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WAPI_PSK
 #endif
 
-void init_wifi_sta(void);
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT BIT1
+#define WIFI_DISCONNECTED_BIT BIT2
+
+esp_err_t init_wifi_sta(void);
 void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
                    void *event_data);
 void stop_wifi(void);

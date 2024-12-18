@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(EXTRA_COMPONENT_DIRS vendor/esp-idf-lib/components)
-
 execute_process(
   COMMAND git rev-parse --short HEAD
   OUTPUT_VARIABLE GIT_COMMIT_HASH

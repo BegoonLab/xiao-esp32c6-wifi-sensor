@@ -326,6 +326,20 @@ Follow these steps to set up your Smart IoT Sensor:
    idf.py -p <TARGET_PORT> flash
    ```
 
+When a sensor misbehaves, it's helpful to output logs to diagnose the issue. By default, logging is disabled. To enable it, follow these steps:
+
+1. Open the configuration menu:
+   ```bash
+   idf.py menuconfig
+   ```
+2. Navigate to:
+   `Component config` → `Log output` → `Default log verbosity`.
+3. Set the verbosity level to `Info`.
+4. Save the changes, and then execute the following command to build, flash, and monitor:
+   ```bash
+   idf.py -p <TARGET_PORT> build flash monitor
+   ```
+
 ## ZigBee
 
 ZigBee can be activated in the menu:

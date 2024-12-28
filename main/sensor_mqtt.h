@@ -16,6 +16,7 @@
 #include "esp_log.h"
 #include "freertos/event_groups.h"
 #include "mqtt_client.h"
+#include "sensor_data.h"
 #include "sensor_id.h"
 #include "sensor_led.h"
 #include "sensor_wifi.h"

@@ -20,8 +20,12 @@
 #include "sensirion_common.h"
 #include "sensirion_gas_index_algorithm.h"
 #include "sensirion_i2c_hal.h"
+#include "sensor_data.h"
 #include "sensor_mqtt.h"
 #include "sgp41_i2c.h"
+#ifdef CONFIG_ENABLE_BATTERY_CHECK
+#include "sensor_adc.h"
+#endif
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
 #include "sensor_bme.h"
 #else
@@ -35,12 +39,12 @@
 
 void init_sgp(void);
 
-void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
-              int32_t *nox_index_value);
+void read_sgp(SensorData *sensor_data);
 
 void deinit_sgp(void);
 
 void send_data_task(void *pvParameters);
 
 void read_compensation_values(uint16_t *compensation_rh,
-                              uint16_t *compensation_t);
+                              uint16_t *compensation_t,
+                              SensorData *sensor_data);

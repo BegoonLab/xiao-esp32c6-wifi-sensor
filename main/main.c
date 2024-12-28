@@ -11,6 +11,7 @@
  */
 
 #include "sdkconfig.h"
+#include "sensor_data.h"
 #include "sensor_gpio.h"
 #include "sensor_i2c.h"
 #include "sensor_id.h"
@@ -48,21 +49,16 @@
 #endif
 
 static const char *TAG = "sensor_main";
+
 char sensor_id[SENSOR_ID_MAX_LEN] = {0};
-double battery_voltage = 0.0;
-float temperature = 0;
-float humidity = 0;
-float pressure = 0;
-uint16_t sraw_voc = 0;
-uint16_t sraw_nox = 0;
-int32_t voc_index_value = 0;
-int32_t nox_index_value = 0;
+SensorData sensor_data;
 
 void app_main(void) {
+  init_sensor_data(&sensor_data);
 #ifdef CONFIG_ENABLE_BATTERY_CHECK
   init_adc();
-  get_battery_voltage(&battery_voltage);
-  ESP_LOGI(TAG, "Battery Voltage: %.2f V", battery_voltage);
+  check_battery(&sensor_data);
+  ESP_LOGI(TAG, "Battery Voltage: %.2f V", sensor_data.battery.voltage);
   ESP_LOGI(TAG, "FW version: %s", GIT_COMMIT_HASH);
   deinit_adc();
 #endif
@@ -75,19 +71,20 @@ void app_main(void) {
 
 #ifdef CONFIG_SENSOR_SGP41
   init_sgp();
-  read_sgp(&sraw_voc, &sraw_nox, &voc_index_value, &nox_index_value);
+  read_sgp(&sensor_data);
   deinit_sgp();
 #endif
 
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
   init_bme();
-  read_bme(&temperature, &humidity, &pressure);
+  read_bme(&sensor_data);
   deinit_bme();
 #endif
 
 #ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
   mqtt_send_sensor_data();
   deinit_i2c();
+  deinit_sensor_data(&sensor_data);
   go_sleep();
 #endif
 

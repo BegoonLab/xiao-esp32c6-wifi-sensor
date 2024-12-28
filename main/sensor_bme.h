@@ -19,6 +19,7 @@
 #include "freertos/FreeRTOS.h"
 #include "math.h"
 #include "memory.h"
+#include "sensor_data.h"
 #include "sensor_i2c.h"
 
 #include "bme280.h"
@@ -29,13 +30,13 @@
 
 void init_bme(void);
 void deinit_bme(void);
-void read_bme(float *temperature, float *humidity, float *pressure);
-void convert_values(float *temperature, float *humidity, float *pressure);
+void read_bme(SensorData *sensor_data);
+void convert_values(double *temperature, double *humidity, double *pressure);
 void bme280_init_after_sleep();
 
-int8_t bme280_get_temperature(float *temperature);
-int8_t bme280_get_humidity(float *humidity);
-int8_t bme280_get_pressure(float *pressure);
+int8_t bme280_get_temperature(double *temperature);
+int8_t bme280_get_humidity(double *humidity);
+int8_t bme280_get_pressure(double *pressure);
 
 /*!
  *  @brief Function for reading the sensor's registers through I2C bus.

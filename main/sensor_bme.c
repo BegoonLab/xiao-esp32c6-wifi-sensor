@@ -135,53 +135,57 @@ void init_bme(void) {
 #endif
 }
 
-void read_bme(float *temperature, float *humidity, float *pressure) {
+void read_bme(SensorData *sensor_data) {
+  if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
 #ifdef CONFIG_SENSOR_BME680
-  int8_t rslt = 0;
-  while (sample_count <= SAMPLE_COUNT) {
-    rslt = bme68x_set_op_mode(BME68X_FORCED_MODE, &dev);
-    bme68x_error_codes_print_result("bme68x_set_op_mode", rslt);
+    int8_t rslt = 0;
+    while (sample_count <= SAMPLE_COUNT) {
+      rslt = bme68x_set_op_mode(BME68X_FORCED_MODE, &dev);
+      bme68x_error_codes_print_result("bme68x_set_op_mode", rslt);
 
-    /* Calculate delay period in microseconds */
-    del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &conf, &dev) +
-                 (heatr_conf.heatr_dur * 1000);
-    dev.delay_us(del_period, dev.intf_ptr);
+      /* Calculate delay period in microseconds */
+      del_period = bme68x_get_meas_dur(BME68X_FORCED_MODE, &conf, &dev) +
+                   (heatr_conf.heatr_dur * 1000);
+      dev.delay_us(del_period, dev.intf_ptr);
 
-    /* Check if rslt == BME68X_OK, report or handle if otherwise */
-    rslt = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &dev);
-    bme68x_error_codes_print_result("bme68x_get_data", rslt);
+      /* Check if rslt == BME68X_OK, report or handle if otherwise */
+      rslt = bme68x_get_data(BME68X_FORCED_MODE, &data, &n_fields, &dev);
+      bme68x_error_codes_print_result("bme68x_get_data", rslt);
 
-    if (n_fields) {
-      *temperature = data.temperature;
-      *pressure = data.pressure;
-      *humidity = data.humidity;
-      sample_count++;
+      if (n_fields) {
+        sensor_data->temperature = data.temperature;
+        sensor_data->pressure = data.pressure;
+        sensor_data->humidity = data.humidity;
+        sample_count++;
+      }
     }
-  }
 #endif
 
 #ifdef CONFIG_SENSOR_BME280
-  bme280_init_after_sleep();
+    bme280_init_after_sleep();
 
-  int8_t rslt = bme280_set_sensor_mode(BME280_POWERMODE_NORMAL, &dev);
-  bme280_error_codes_print_result("bme280_set_sensor_mode", rslt);
+    int8_t rslt = bme280_set_sensor_mode(BME280_POWERMODE_NORMAL, &dev);
+    bme280_error_codes_print_result("bme280_set_sensor_mode", rslt);
 
-  rslt = bme280_get_temperature(temperature);
-  bme280_error_codes_print_result("bme280_get_temperature", rslt);
+    rslt = bme280_get_temperature(&sensor_data->temperature);
+    bme280_error_codes_print_result("bme280_get_temperature", rslt);
 
-  rslt = bme280_get_humidity(humidity);
-  bme280_error_codes_print_result("bme280_get_humidity", rslt);
+    rslt = bme280_get_humidity(&sensor_data->humidity);
+    bme280_error_codes_print_result("bme280_get_humidity", rslt);
 
-  rslt = bme280_get_pressure(pressure);
-  bme280_error_codes_print_result("bme280_get_pressure", rslt);
+    rslt = bme280_get_pressure(&sensor_data->pressure);
+    bme280_error_codes_print_result("bme280_get_pressure", rslt);
 
-  bme280_set_sensor_mode(BME280_POWERMODE_SLEEP, &dev);
-  bme280_error_codes_print_result("bme280_set_sensor_mode", rslt);
+    bme280_set_sensor_mode(BME280_POWERMODE_SLEEP, &dev);
+    bme280_error_codes_print_result("bme280_set_sensor_mode", rslt);
 #endif
 
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
-  convert_values(temperature, humidity, pressure);
+    convert_values(&sensor_data->temperature, &sensor_data->humidity,
+                   &sensor_data->pressure);
 #endif
+    xSemaphoreGive(sensor_data->mutex);
+  }
 }
 
 void deinit_bme(void) {
@@ -196,13 +200,13 @@ void deinit_bme(void) {
 #endif
 }
 
-void convert_values(float *temperature, float *humidity, float *pressure) {
+void convert_values(double *temperature, double *humidity, double *pressure) {
   // Round temperature and humidity to two decimal places
-  *temperature = roundf(*temperature * 100.0f) / 100.0f;
-  *humidity = roundf(*humidity * 100.0f) / 100.0f;
+  *temperature = round(*temperature * 100.0) / 100.0;
+  *humidity = round(*humidity * 100.0) / 100.0;
 
   // Convert pressure from Pa to hPa and round to two decimal places
-  *pressure = roundf((*pressure / 100.0f) * 100.0f) / 100.0f;
+  *pressure = round((*pressure / 100.0) * 100.0) / 100.0;
 }
 
 #ifdef CONFIG_SENSOR_BME280
@@ -252,7 +256,7 @@ void bme280_error_codes_print_result(const char api_name[], int8_t rslt) {
 /*!
  *  @brief This internal API is used to get compensated temperature data.
  */
-int8_t bme280_get_temperature(float *temperature) {
+int8_t bme280_get_temperature(double *temperature) {
   int8_t rslt = BME280_E_NULL_PTR;
   int8_t idx = 0;
   uint8_t status_reg = 0;
@@ -270,7 +274,7 @@ int8_t bme280_get_temperature(float *temperature) {
       rslt = bme280_get_sensor_data(BME280_TEMP, &comp_data, &dev);
       bme280_error_codes_print_result("bme280_get_sensor_data", rslt);
 
-      *temperature = (float)comp_data.temperature;
+      *temperature = comp_data.temperature;
       idx++;
     }
   }
@@ -281,7 +285,7 @@ int8_t bme280_get_temperature(float *temperature) {
 /*!
  *  @brief This internal API is used to get compensated humidity data.
  */
-int8_t bme280_get_humidity(float *humidity) {
+int8_t bme280_get_humidity(double *humidity) {
   int8_t rslt = BME280_E_NULL_PTR;
   int8_t idx = 0;
   uint8_t status_reg = 0;
@@ -299,7 +303,7 @@ int8_t bme280_get_humidity(float *humidity) {
       rslt = bme280_get_sensor_data(BME280_HUM, &comp_data, &dev);
       bme280_error_codes_print_result("bme280_get_sensor_data", rslt);
 
-      *humidity = (float)comp_data.humidity;
+      *humidity = comp_data.humidity;
       idx++;
     }
   }
@@ -310,7 +314,7 @@ int8_t bme280_get_humidity(float *humidity) {
 /*!
  *  @brief This internal API is used to get compensated pressure data.
  */
-int8_t bme280_get_pressure(float *pressure) {
+int8_t bme280_get_pressure(double *pressure) {
   int8_t rslt = BME280_E_NULL_PTR;
   int8_t idx = 0;
   uint8_t status_reg = 0;
@@ -328,7 +332,7 @@ int8_t bme280_get_pressure(float *pressure) {
       rslt = bme280_get_sensor_data(BME280_PRESS, &comp_data, &dev);
       bme280_error_codes_print_result("bme280_get_sensor_data", rslt);
 
-      *pressure = (float)comp_data.pressure;
+      *pressure = comp_data.pressure;
 
       idx++;
     }

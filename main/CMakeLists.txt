@@ -13,6 +13,7 @@ idf_component_register(
   "sensor_sgp.c"
   "sensor_sleep.c"
   "sensor_i2c.c"
+  "sensor_data.c"
   "../vendor/embedded-i2c-sgp41/sgp41_i2c.c"
   "../vendor/embedded-i2c-sgp41/sensirion_i2c.c"
   "../vendor/embedded-i2c-sgp41/sensirion_common.c"

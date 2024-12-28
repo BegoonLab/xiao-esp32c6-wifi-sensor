@@ -20,6 +20,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ha/esp_zigbee_ha_standard.h"
+#include "sensor_data.h"
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
 #include "sensor_bme.h"
 #endif
@@ -84,7 +85,7 @@ void init_zb(void);
 
 void start_zb(void);
 
-int16_t zb_value_to_s16(float value);
+int16_t zb_value_to_s16(double value);
 
 char *build_zcl_string(const char *input_string);
 
@@ -97,8 +98,6 @@ void s_oneshot_timer_callback(void *arg);
 esp_zb_ep_list_t *
 custom_sensor_ep_create(uint8_t endpoint_id,
                         esp_zb_configuration_tool_cfg_t *sensor);
-
-double calculate_battery_percentage(double voltage);
 
 void sensor_zb_update_clusters();
 

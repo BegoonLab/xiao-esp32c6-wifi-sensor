@@ -18,10 +18,7 @@ static esp_timer_handle_t s_oneshot_timer;
 
 bool go_sleep = false;
 
-extern double battery_voltage;
-extern float temperature;
-extern float humidity;
-extern float pressure;
+extern SensorData sensor_data;
 
 void init_zb(void) {
   esp_zb_platform_config_t config = {
@@ -32,7 +29,7 @@ void init_zb(void) {
   ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 }
 
-int16_t zb_value_to_s16(float value) { return (int16_t)(value * 100); }
+int16_t zb_value_to_s16(double value) { return (int16_t)(value * 100); }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
   ESP_RETURN_ON_FALSE(esp_zb_bdb_start_top_level_commissioning(mode_mask) ==
@@ -193,7 +190,7 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
 
   // Add Temperature Measurement cluster
   esp_zb_temperature_meas_cluster_cfg_t temp_meas_cfg = {
-      .measured_value = zb_value_to_s16(temperature),
+      .measured_value = zb_value_to_s16(sensor_data.temperature),
       .min_value = zb_value_to_s16(ESP_TEMP_SENSOR_MIN_VALUE),
       .max_value = zb_value_to_s16(ESP_TEMP_SENSOR_MAX_VALUE)};
   ESP_ERROR_CHECK(esp_zb_cluster_list_add_temperature_meas_cluster(
@@ -202,7 +199,7 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
 
   // Add Humidity Measurement cluster
   esp_zb_humidity_meas_cluster_cfg_t humidity_cfg = {
-      .measured_value = zb_value_to_s16(humidity),
+      .measured_value = zb_value_to_s16(sensor_data.humidity),
       .min_value = zb_value_to_s16(ESP_HUMIDITY_SENSOR_MIN_VALUE),
       .max_value = zb_value_to_s16(ESP_HUMIDITY_SENSOR_MAX_VALUE)};
   ESP_ERROR_CHECK(esp_zb_cluster_list_add_humidity_meas_cluster(
@@ -211,7 +208,7 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
 
   // Add Pressure Measurement cluster
   esp_zb_pressure_meas_cluster_cfg_t pressure_cfg = {
-      .measured_value = (int16_t)(pressure),
+      .measured_value = (int16_t)(sensor_data.pressure),
       .min_value = zb_value_to_s16(ESP_PRESSURE_SENSOR_MIN_VALUE),
       .max_value = zb_value_to_s16(ESP_PRESSURE_SENSOR_MAX_VALUE)};
   ESP_ERROR_CHECK(esp_zb_cluster_list_add_pressure_meas_cluster(
@@ -220,13 +217,14 @@ custom_sensor_clusters_create(esp_zb_configuration_tool_cfg_t *sensor) {
 
   // Add Battery Diagnostic cluster
   esp_zb_power_config_cluster_cfg_t power_cfg = {
-      .main_voltage = (uint16_t)(battery_voltage * 10),
+      .main_voltage = (uint16_t)(sensor_data.battery.voltage * 10),
       .main_voltage_min = 33,
       .main_voltage_max = 42};
-  uint16_t battery_voltage_measured = (uint16_t)(battery_voltage * 10);
+  uint16_t battery_voltage_measured =
+      (uint16_t)(sensor_data.battery.voltage * 10);
   uint16_t battery_quantity = 1;
   uint16_t battery_percentage =
-      (uint16_t)(calculate_battery_percentage(battery_voltage) * 2);
+      (uint16_t)(sensor_data.battery.remaining_charge * 2);
   uint16_t battery_size = ESP_ZB_ZCL_POWER_CONFIG_BATTERY_SIZE_BUILT_IN;
   esp_zb_attribute_list_t *power_config_cluster =
       esp_zb_power_config_cluster_create(&power_cfg);
@@ -397,12 +395,13 @@ void zb_deep_sleep_init(void) {
 
 void sensor_zb_update_clusters() {
   esp_zb_zcl_status_t status;
-  int16_t measured_temperature = zb_value_to_s16(temperature);
-  int16_t measured_humidity = zb_value_to_s16(humidity);
-  int16_t measured_pressure = (int16_t)(pressure);
-  uint16_t battery_voltage_measured = (uint16_t)(battery_voltage * 10);
+  int16_t measured_temperature = zb_value_to_s16(sensor_data.temperature);
+  int16_t measured_humidity = zb_value_to_s16(sensor_data.humidity);
+  int16_t measured_pressure = (int16_t)(sensor_data.pressure);
+  uint16_t battery_voltage_measured =
+      (uint16_t)(sensor_data.battery.voltage * 10);
   uint16_t battery_percentage =
-      (uint16_t)(calculate_battery_percentage(battery_voltage) * 2);
+      (uint16_t)(sensor_data.battery.remaining_charge * 2);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   status = esp_zb_zcl_set_attribute_val(
@@ -500,31 +499,5 @@ char *build_zcl_string(const char *input_string) {
   memcpy(&zcl_string[1], input_string, len);
 
   return zcl_string;
-}
-
-double calculate_battery_percentage(double voltage) {
-  if (voltage >= 4.2) {
-    return 100.0;
-  } else if (voltage >= 4.1) {
-    return 90 + (voltage - 4.1) * 100; // Linear between 4.1V and 4.2V
-  } else if (voltage >= 4.0) {
-    return 80 + (voltage - 4.0) * 100;
-  } else if (voltage >= 3.9) {
-    return 70 + (voltage - 3.9) * 100;
-  } else if (voltage >= 3.8) {
-    return 60 + (voltage - 3.8) * 100;
-  } else if (voltage >= 3.7) {
-    return 50 + (voltage - 3.7) * 100;
-  } else if (voltage >= 3.6) {
-    return 40 + (voltage - 3.6) * 100;
-  } else if (voltage >= 3.5) {
-    return 30 + (voltage - 3.5) * 100;
-  } else if (voltage >= 3.4) {
-    return 20 + (voltage - 3.4) * 100;
-  } else if (voltage >= 3.3) {
-    return 10 + (voltage - 3.3) * 100;
-  } else {
-    return 0.0;
-  }
 }
 #endif

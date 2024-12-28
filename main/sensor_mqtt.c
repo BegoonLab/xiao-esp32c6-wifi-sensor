@@ -21,14 +21,7 @@ static EventGroupHandle_t s_mqtt_event_group;
 volatile esp_mqtt_client_handle_t clientHandle;
 static char mqtt_topic_full[MQTT_TOPIC_MAX_LEN];
 
-extern double battery_voltage;
-extern float temperature;
-extern float humidity;
-extern float pressure;
-extern uint16_t sraw_voc;
-extern uint16_t sraw_nox;
-extern int32_t voc_index_value;
-extern int32_t nox_index_value;
+extern SensorData sensor_data;
 
 esp_mqtt_client_handle_t init_mqtt_client() {
   snprintf(mqtt_topic_full, sizeof(mqtt_topic_full), "%s/%s/data",
@@ -148,28 +141,28 @@ void mqtt_prepare_json(char *json_string, int rssi,
   cJSON *json = cJSON_CreateObject();
   cJSON_AddStringToObject(json, "ID", sensor_id);
   cJSON_AddNumberToObject(json, "RSSI", rssi);
-  cJSON_AddNumberToObject(json, "battery_voltage", battery_voltage);
+
+  if (xSemaphoreTake(sensor_data.mutex, portMAX_DELAY) == pdTRUE) {
+    cJSON_AddNumberToObject(json, "battery_voltage",
+                            sensor_data.battery.voltage);
+    cJSON_AddNumberToObject(json, "battery_charge",
+                            sensor_data.battery.remaining_charge);
 
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
-  char temperature_str[16];
-  snprintf(temperature_str, sizeof(temperature_str), "%.2f", temperature);
-  cJSON_AddStringToObject(json, "temperature", temperature_str);
-
-  char humidity_str[16];
-  snprintf(humidity_str, sizeof(humidity_str), "%.2f", humidity);
-  cJSON_AddStringToObject(json, "humidity", humidity_str);
-
-  char pressure_str[16];
-  snprintf(pressure_str, sizeof(pressure_str), "%.2f", pressure);
-  cJSON_AddStringToObject(json, "pressure", pressure_str);
+    cJSON_AddNumberToObject(json, "temperature", sensor_data.temperature);
+    cJSON_AddNumberToObject(json, "humidity", sensor_data.humidity);
+    cJSON_AddNumberToObject(json, "pressure", sensor_data.pressure);
 #endif
 
 #if defined(CONFIG_SENSOR_SGP41)
-  cJSON_AddNumberToObject(json, "voc_raw", sraw_voc);
-  cJSON_AddNumberToObject(json, "nox_raw", sraw_nox);
-  cJSON_AddNumberToObject(json, "voc_index", voc_index_value);
-  cJSON_AddNumberToObject(json, "nox_index", nox_index_value);
+    cJSON_AddNumberToObject(json, "voc_raw", sensor_data.sraw_voc);
+    cJSON_AddNumberToObject(json, "nox_raw", sensor_data.sraw_nox);
+    cJSON_AddNumberToObject(json, "voc_index", sensor_data.voc_index_value);
+    cJSON_AddNumberToObject(json, "nox_index", sensor_data.nox_index_value);
 #endif
+
+    xSemaphoreGive(sensor_data.mutex);
+  }
 
   cJSON_AddNumberToObject(
       json, "connection_duration_ms",

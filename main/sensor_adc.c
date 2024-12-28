@@ -125,7 +125,7 @@ void deinit_adc(void) {
   }
 }
 
-void get_battery_voltage(double *battery_voltage) {
+void check_battery(SensorData *sensor_data) {
 #ifdef CONFIG_ENABLE_BATTERY_CHECK
   // Retrieve and convert the divider ratio
   double voltage_divider_ratio =
@@ -155,11 +155,57 @@ void get_battery_voltage(double *battery_voltage) {
 
   battery_voltage_mv /= 8;
 
-  // Convert milli-volts to volts with two decimal places
-  *battery_voltage =
-      round((battery_voltage_mv * voltage_divider_ratio / 1000.0) * 100.0) /
-      100.0;
-#else
-  *battery_voltage = 0;
+  if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
+    sensor_data->battery.voltage =
+        round((battery_voltage_mv * voltage_divider_ratio / 1000.0) * 100.0) /
+        100.0;
+    sensor_data->battery.remaining_charge =
+        (float)calculate_battery_percentage(sensor_data->battery.voltage);
+    xSemaphoreGive(sensor_data->mutex);
+  }
 #endif
+}
+
+double calculate_battery_percentage(double voltage) {
+  if (voltage >= 4.2) {
+    return 100.0;
+  }
+
+  if (voltage >= 4.1) {
+    return 90 + (voltage - 4.1) * 100; // Linear between 4.1V and 4.2V
+  }
+
+  if (voltage >= 4.0) {
+    return 80 + (voltage - 4.0) * 100;
+  }
+
+  if (voltage >= 3.9) {
+    return 70 + (voltage - 3.9) * 100;
+  }
+
+  if (voltage >= 3.8) {
+    return 60 + (voltage - 3.8) * 100;
+  }
+
+  if (voltage >= 3.7) {
+    return 50 + (voltage - 3.7) * 100;
+  }
+
+  if (voltage >= 3.6) {
+    return 40 + (voltage - 3.6) * 100;
+  }
+
+  if (voltage >= 3.5) {
+    return 30 + (voltage - 3.5) * 100;
+  }
+
+  if (voltage >= 3.4) {
+    return 20 + (voltage - 3.4) * 100;
+  }
+
+  if (voltage >= 3.3) {
+    return 10 + (voltage - 3.3) * 100;
+  }
+
+  return 0.0;
 }

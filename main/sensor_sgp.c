@@ -26,10 +26,6 @@ TaskHandle_t send_data_task_handle = NULL;
 
 static i2c_master_dev_handle_t sgp41_i2c_handle;
 
-extern float temperature;
-extern float humidity;
-extern float pressure;
-
 const float sampling_interval = 10.f;
 int32_t send_data_after = CONFIG_WAKEUP_TIME_SEC + 60;
 volatile bool can_go_sleep = true;
@@ -50,8 +46,7 @@ void init_sgp(void) {
               &send_data_task_handle);
 }
 
-void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
-              int32_t *nox_index_value) {
+void read_sgp(SensorData *sensor_data) {
 
   int16_t error = 0;
   uint16_t serial_number[3];
@@ -81,7 +76,8 @@ void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
     sensirion_i2c_hal_sleep_usec(1000000);
 
     error = sgp41_execute_conditioning(DEFAULT_COMPENSATION_RH,
-                                       DEFAULT_COMPENSATION_T, sraw_voc);
+                                       DEFAULT_COMPENSATION_T,
+                                       &sensor_data->sraw_voc);
     nox_conditioning_s--;
     ESP_LOGI(TAG, "NOx conditioning remaining time: %i s", nox_conditioning_s);
 
@@ -102,11 +98,15 @@ void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
                                  1000);
 
     // Measure RH and T signals and convert to SGP40 ticks
-    read_compensation_values(&compensation_rh, &compensation_t);
+    read_compensation_values(&compensation_rh, &compensation_t, sensor_data);
 
     // Request a first measurement to turn the heater on
-    error = sgp41_measure_raw_signals(compensation_rh, compensation_t, sraw_voc,
-                                      sraw_nox);
+    if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
+      error = sgp41_measure_raw_signals(compensation_rh, compensation_t,
+                                        &sensor_data->sraw_voc,
+                                        &sensor_data->sraw_nox);
+      xSemaphoreGive(sensor_data->mutex);
+    }
 
     if (error) {
       ESP_LOGE(TAG, "Error executing sgp41_measure_raw_signals(): %i", error);
@@ -117,8 +117,12 @@ void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
     sensirion_i2c_hal_sleep_usec(170000);
 
     // Request the actual measurement
-    error = sgp41_measure_raw_signals(compensation_rh, compensation_t, sraw_voc,
-                                      sraw_nox);
+    if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
+      error = sgp41_measure_raw_signals(compensation_rh, compensation_t,
+                                        &sensor_data->sraw_voc,
+                                        &sensor_data->sraw_nox);
+      xSemaphoreGive(sensor_data->mutex);
+    }
 
     if (error) {
       ESP_LOGE(TAG, "Error executing sgp41_measure_raw_signals(): %i", error);
@@ -135,10 +139,22 @@ void read_sgp(uint16_t *sraw_voc, uint16_t *sraw_nox, int32_t *voc_index_value,
 
     // Process raw signals by Gas Index Algorithm
     // to get the VOC and NOx index values
-    GasIndexAlgorithm_process(&voc_params, *sraw_voc, voc_index_value);
-    GasIndexAlgorithm_process(&nox_params, *sraw_nox, nox_index_value);
-    ESP_LOGI(TAG, "VOC Raw: %i\tVOC Index: %li\tNOx Raw: %i\tNOx Index: %li",
-             *sraw_voc, *voc_index_value, *sraw_nox, *nox_index_value);
+    if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
+      GasIndexAlgorithm_process(&voc_params, sensor_data->sraw_voc,
+                                &sensor_data->voc_index_value);
+      GasIndexAlgorithm_process(&nox_params, sensor_data->sraw_nox,
+                                &sensor_data->nox_index_value);
+      ESP_LOGI(TAG, "VOC Raw: %i\tVOC Index: %li\tNOx Raw: %i\tNOx Index: %li",
+               sensor_data->sraw_voc, sensor_data->voc_index_value,
+               sensor_data->sraw_nox, sensor_data->nox_index_value);
+      xSemaphoreGive(sensor_data->mutex);
+    }
+
+#ifdef CONFIG_ENABLE_BATTERY_CHECK
+    init_adc();
+    check_battery(sensor_data);
+    deinit_adc();
+#endif
   }
 }
 
@@ -222,24 +238,31 @@ void send_data_task(void *pvParameters) {
  * @param compensation_t: out variable for temperature
  */
 void read_compensation_values(uint16_t *compensation_rh,
-                              uint16_t *compensation_t) {
+                              uint16_t *compensation_t,
+                              SensorData *sensor_data) {
 
   *compensation_rh = DEFAULT_COMPENSATION_RH;
   *compensation_t = DEFAULT_COMPENSATION_T;
 
 #if defined(CONFIG_SENSOR_BME280) || defined(CONFIG_SENSOR_BME680)
 
-  read_bme(&temperature, &humidity, &pressure);
+  read_bme(sensor_data);
 
-  ESP_LOGI(TAG, "T: %.2f\tRH: %.2f", temperature, humidity);
+  if (xSemaphoreTake(sensor_data->mutex, portMAX_DELAY) == pdTRUE) {
+    ESP_LOGI(TAG, "T: %.2f\tRH: %.2f", sensor_data->temperature,
+             sensor_data->humidity);
 
-  // convert temperature and humidity to ticks as defined by SGP40
-  // interface
-  // NOTE: in case you read RH and T raw signals check out the
-  // ticks specification in the datasheet, as they can be different for
-  // different sensors
-  *compensation_rh = (uint16_t)humidity * 65535 / 100;
-  *compensation_t = (uint16_t)(temperature + 45) * 65535 / 175;
+    // convert temperature and humidity to ticks as defined by SGP40
+    // interface
+    // NOTE: in case you read RH and T raw signals check out the
+    // ticks specification in the datasheet, as they can be different for
+    // different sensors
+    *compensation_rh = (uint16_t)sensor_data->humidity * 65535 / 100;
+    *compensation_t = (uint16_t)(sensor_data->temperature + 45) * 65535 / 175;
+
+    xSemaphoreGive(sensor_data->mutex);
+  }
+
 #endif
 }
 #endif

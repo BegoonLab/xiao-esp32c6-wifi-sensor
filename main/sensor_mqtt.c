@@ -18,12 +18,18 @@ static const char *TAG = "sensor_mqtt";
 
 static EventGroupHandle_t s_mqtt_event_group;
 
-volatile esp_mqtt_client_handle_t clientHandle;
+static esp_mqtt_client_handle_t clientHandle;
 static char mqtt_topic_full[MQTT_TOPIC_MAX_LEN];
 
 extern SensorData sensor_data;
 
-esp_mqtt_client_handle_t init_mqtt_client() {
+void init_mqtt_client() {
+
+  if (init_wifi_sta() != ESP_OK) {
+    ESP_LOGE(TAG, "WiFi is not initiated");
+    return;
+  }
+
   snprintf(mqtt_topic_full, sizeof(mqtt_topic_full), "%s/%s/data",
            CONFIG_MQTT_TOPIC, sensor_id);
 
@@ -46,7 +52,36 @@ esp_mqtt_client_handle_t init_mqtt_client() {
   // Register the event handler
   esp_mqtt_client_register_event(clientHandle, ESP_EVENT_ANY_ID,
                                  mqtt_event_handler, NULL);
+}
 
+void mqtt_publish(const char *data) {
+  for (int i = 0; i < 3; ++i) {
+    esp_err_t publish_ret =
+        esp_mqtt_client_publish(clientHandle, mqtt_topic_full, data, 0,
+                                CONFIG_MQTT_QOS, CONFIG_MQTT_RETAIN);
+
+    if (publish_ret <= 0) {
+      ESP_LOGE(TAG, "Failed to publish message (%s)",
+               esp_err_to_name(publish_ret));
+    }
+
+    // Wait for published bit
+    EventBits_t bits = xEventGroupWaitBits(
+        s_mqtt_event_group, MQTT_PUBLISHED_BIT, pdFALSE, pdFALSE, WAIT);
+
+    if (bits & MQTT_PUBLISHED_BIT) {
+      trigger_quick_blink();
+      xEventGroupClearBits(s_mqtt_event_group, bits);
+      break;
+    }
+
+    trigger_slow_blink();
+
+    xEventGroupClearBits(s_mqtt_event_group, bits);
+  }
+}
+
+void start_mqtt() {
   // Start the MQTT client
   esp_err_t ret = esp_mqtt_client_start(clientHandle);
   if (ret != ESP_OK) {
@@ -62,6 +97,7 @@ esp_mqtt_client_handle_t init_mqtt_client() {
     if (bits & MQTT_CONNECTED_BIT) {
       ESP_LOGI(TAG, "Connected to MQTT broker");
       trigger_quick_blink();
+      xEventGroupClearBits(s_mqtt_event_group, bits);
       break;
     }
     ESP_LOGE(TAG, "MQTT connect failed");
@@ -72,43 +108,15 @@ esp_mqtt_client_handle_t init_mqtt_client() {
 
     esp_mqtt_client_reconnect(clientHandle);
   }
-
-  return clientHandle;
 }
 
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *data) {
-  for (int i = 0; i < 3; ++i) {
-    esp_err_t publish_ret = esp_mqtt_client_publish(
-        client, mqtt_topic_full, data, 0, CONFIG_MQTT_QOS, CONFIG_MQTT_RETAIN);
-
-    if (publish_ret <= 0) {
-      ESP_LOGE(TAG, "Failed to publish message (%s)",
-               esp_err_to_name(publish_ret));
-    }
-
-    // Wait for published bit
-    EventBits_t bits = xEventGroupWaitBits(
-        s_mqtt_event_group, MQTT_PUBLISHED_BIT, pdFALSE, pdFALSE, WAIT);
-
-    if (bits & MQTT_PUBLISHED_BIT) {
-      trigger_quick_blink();
-      break;
-    }
-
-    trigger_slow_blink();
-
-    xEventGroupClearBits(s_mqtt_event_group, bits);
-  }
-}
-
-void stop_mqtt(esp_mqtt_client_handle_t client) {
+void stop_mqtt() {
   ESP_LOGI(TAG, "Stop MQTT client");
-  esp_err_t err = esp_mqtt_client_stop(client);
+  esp_err_t err = esp_mqtt_client_stop(clientHandle);
   if (err) {
     ESP_LOGE(TAG, "Failed to stop MQTT client: (%i)", err);
-    esp_mqtt_client_disconnect(client);
+    esp_mqtt_client_disconnect(clientHandle);
   }
-  esp_mqtt_client_destroy(client);
 }
 
 void mqtt_event_handler(void *handler_args, esp_event_base_t base,
@@ -175,13 +183,14 @@ void mqtt_prepare_json(char *json_string, int rssi,
   }
 
   cJSON_Delete(json);
+  json = NULL;
 }
 
 void mqtt_send_sensor_data(void) {
   struct timeval start_to_connect;
   gettimeofday(&start_to_connect, NULL);
-  if (init_wifi_sta() == ESP_OK) {
-    esp_mqtt_client_handle_t mqtt_client = init_mqtt_client();
+  if (start_wifi() == ESP_OK) {
+    start_mqtt();
 
     struct timeval end_to_connect;
     gettimeofday(&end_to_connect, NULL);
@@ -196,13 +205,14 @@ void mqtt_send_sensor_data(void) {
     } else {
       mqtt_prepare_json(json_string, rssi, start_to_connect, end_to_connect);
 
-      mqtt_publish(mqtt_client, json_string);
+      mqtt_publish(json_string);
 
       // Cleanup
       free(json_string);
+      json_string = NULL;
     }
 
-    stop_mqtt(mqtt_client);
+    stop_mqtt();
   }
 
   stop_wifi();

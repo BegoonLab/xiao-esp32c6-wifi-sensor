@@ -69,6 +69,10 @@ void app_main(void) {
   resolve_sensor_id();
   init_i2c();
 
+#ifdef CONFIG_SENSOR_CONNECTION_WIFI_MQTT
+  init_mqtt_client();
+#endif
+
 #ifdef CONFIG_SENSOR_SGP41
   init_sgp();
   read_sgp(&sensor_data);

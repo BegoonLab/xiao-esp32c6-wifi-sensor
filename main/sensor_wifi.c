@@ -19,7 +19,6 @@ static EventGroupHandle_t s_wifi_event_group;
 static const char *TAG = "sensor_wifi";
 static int s_retry_num = 0;
 bool disconnect_wifi = false;
-struct esp_netif_obj *netif_obj;
 
 esp_err_t init_wifi_sta(void) {
   s_wifi_event_group = xEventGroupCreate();
@@ -27,7 +26,7 @@ esp_err_t init_wifi_sta(void) {
   ESP_ERROR_CHECK(esp_netif_init());
 
   ESP_ERROR_CHECK(esp_event_loop_create_default());
-  netif_obj = esp_netif_create_default_wifi_sta();
+  esp_netif_create_default_wifi_sta();
 
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -61,9 +60,13 @@ esp_err_t init_wifi_sta(void) {
   ESP_ERROR_CHECK(
       esp_wifi_set_country_code(CONFIG_ESP_WIFI_COUNTRY_CODE, true));
   ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MAX_MODEM));
-  ESP_ERROR_CHECK(esp_wifi_start());
-
   ESP_LOGI(TAG, "init_wifi_sta finished.");
+
+  return ESP_OK;
+}
+
+esp_err_t start_wifi(void) {
+  ESP_ERROR_CHECK(esp_wifi_start());
 
   /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or
    * connection failed for the maximum number of re-tries (WIFI_FAIL_BIT). The
@@ -94,18 +97,16 @@ esp_err_t init_wifi_sta(void) {
 void stop_wifi(void) {
   disconnect_wifi = true;
 
-  esp_wifi_stop();
   esp_wifi_disconnect();
+  esp_wifi_stop();
 
   EventBits_t bits =
       xEventGroupWaitBits(s_wifi_event_group, WIFI_DISCONNECTED_BIT, pdFALSE,
                           pdFALSE, pdMS_TO_TICKS(3000));
 
-  xEventGroupClearBits(s_wifi_event_group, bits);
+  ESP_LOGI(TAG, "WiFi stopped");
 
-  esp_wifi_deinit();
-  esp_event_loop_delete_default();
-  esp_netif_destroy_default_wifi(netif_obj);
+  xEventGroupClearBits(s_wifi_event_group, bits);
 }
 
 void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,

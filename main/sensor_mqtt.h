@@ -43,10 +43,11 @@
 void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                         int32_t event_id, void *event_data);
 
-esp_mqtt_client_handle_t init_mqtt_client();
+void init_mqtt_client();
 
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *data);
-void stop_mqtt(esp_mqtt_client_handle_t client);
+void mqtt_publish(const char *data);
+void stop_mqtt();
+void start_mqtt();
 void mqtt_prepare_json(char *json_string, int rssi,
                        struct timeval start_to_connect,
                        struct timeval end_to_connect);

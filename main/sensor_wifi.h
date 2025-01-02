@@ -53,3 +53,4 @@ esp_err_t init_wifi_sta(void);
 void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
                    void *event_data);
 void stop_wifi(void);
+esp_err_t start_wifi(void);

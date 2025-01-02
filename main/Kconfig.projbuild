@@ -6,6 +6,7 @@ menu "XIAO Sensor Configuration"
             Choose the type of sensor connection to use.
             - **WiFi + MQTT**: WiFi and MQTT.
             - **ZigBee**: ZigBee.
+            - **Matter over Thread**: Matter over Thread.
 
         config SENSOR_CONNECTION_WIFI_MQTT
             bool "WiFi + MQTT"
@@ -16,6 +17,11 @@ menu "XIAO Sensor Configuration"
             bool "ZigBee"
             help
                 Enable ZigBee connection.
+
+        config SENSOR_CONNECTION_MATTER_OVER_THREAD
+            bool "Matter over Thread"
+            help
+                Enable Matter over Thread connection.
 
     endchoice
     menu "Wi-Fi Configuration"

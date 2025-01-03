@@ -39,12 +39,11 @@
 
 void init_sgp(void);
 
-void read_sgp(SensorData *sensor_data);
+void read_sgp();
 
 void deinit_sgp(void);
 
 void send_data_task(void *pvParameters);
 
 void read_compensation_values(uint16_t *compensation_rh,
-                              uint16_t *compensation_t,
-                              SensorData *sensor_data);
+                              uint16_t *compensation_t);

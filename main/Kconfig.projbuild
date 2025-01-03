@@ -245,6 +245,22 @@ menu "XIAO Sensor Configuration"
                 Use an external antenna for ZigBee connectivity.
     endmenu
 
+    menu "Matter over Thread Configuration"
+        depends on SENSOR_CONNECTION_MATTER_OVER_THREAD
+        config SENSOR_ID
+            string "Sensor ID"
+            default ""
+            help
+                Unique identifier for the sensor.
+
+                If left empty, the device's MAC address will be used as the Sensor ID.
+
+        config MATTER_OVER_THREAD_ANTENNA_EXTERNAL
+            bool "External Antenna"
+            help
+                Use an external antenna for ZigBee connectivity.
+    endmenu
+
     menu "Sensor Configuration"
         config SENSOR_BME680
             bool "BME680"

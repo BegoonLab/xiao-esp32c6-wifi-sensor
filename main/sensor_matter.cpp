@@ -11,10 +11,12 @@
  */
 
 #include "sensor_matter.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "esp_matter.h"
+#include "esp_matter_ota.h"
+#include "sensor_openthread.h"
+#include <algorithm>
+#include <app/server/CommissioningWindowManager.h>
+#include <app/server/Server.h>
 
 static const char *TAG = "sensor_matter";
 
@@ -22,90 +24,6 @@ using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
-
-esp_err_t start_matter(void) {
-  /* Matter start */
-  err = esp_matter::start(app_event_cb);
-  ABORT_APP_ON_FAILURE(err == ESP_OK,
-                       ESP_LOGE(TAG, "Failed to start Matter, err:%d", err));
-}
-
-esp_err_t init_matter(void) {
-  /* Create a Matter node and add the mandatory Root Node device type on
-   * endpoint 0 */
-  node::config_t node_config;
-  node_t *node = node::create(&node_config, app_attribute_update_cb,
-                              app_identification_cb);
-  ABORT_APP_ON_FAILURE(node != nullptr,
-                       ESP_LOGE(TAG, "Failed to create Matter node"));
-
-  // add temperature sensor device
-  temperature_sensor::config_t temp_sensor_config;
-  endpoint_t *temp_sensor_ep = temperature_sensor::create(
-      node, &temp_sensor_config, ENDPOINT_FLAG_NONE, NULL);
-  ABORT_APP_ON_FAILURE(
-      temp_sensor_ep != nullptr,
-      ESP_LOGE(TAG, "Failed to create temperature_sensor endpoint"));
-
-  // add the humidity sensor device
-  humidity_sensor::config_t humidity_sensor_config;
-  endpoint_t *humidity_sensor_ep = humidity_sensor::create(
-      node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, NULL);
-  ABORT_APP_ON_FAILURE(
-      humidity_sensor_ep != nullptr,
-      ESP_LOGE(TAG, "Failed to create humidity_sensor endpoint"));
-
-  esp_openthread_platform_config_t config = {
-      .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),
-      .host_config = ESP_OPENTHREAD_DEFAULT_HOST_CONFIG(),
-      .port_config = ESP_OPENTHREAD_DEFAULT_PORT_CONFIG(),
-  };
-  set_openthread_platform_config(&config);
-
-  return ESP_OK;
-}
-
-// Application cluster specification, 7.18.2.11. Temperature
-// represents a temperature on the Celsius scale with a resolution of 0.01°C.
-// temp = (temperature in °C) x 100
-static void temp_sensor_notification(uint16_t endpoint_id, float temp,
-                                     void *user_data) {
-  // schedule the attribute update so that we can report it from matter thread
-  chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, temp]() {
-    attribute_t *attribute =
-        attribute::get(endpoint_id, TemperatureMeasurement::Id,
-                       TemperatureMeasurement::Attributes::MeasuredValue::Id);
-
-    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-    attribute::get_val(attribute, &val);
-    val.val.i16 = static_cast<int16_t>(temp * 100);
-
-    attribute::update(endpoint_id, TemperatureMeasurement::Id,
-                      TemperatureMeasurement::Attributes::MeasuredValue::Id,
-                      &val);
-  });
-}
-
-// Application cluster specification, 2.6.4.1. MeasuredValue Attribute
-// represents the humidity in percent.
-// humidity = (humidity in %) x 100
-static void humidity_sensor_notification(uint16_t endpoint_id, float humidity,
-                                         void *user_data) {
-  // schedule the attribute update so that we can report it from matter thread
-  chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, humidity]() {
-    attribute_t *attribute = attribute::get(
-        endpoint_id, RelativeHumidityMeasurement::Id,
-        RelativeHumidityMeasurement::Attributes::MeasuredValue::Id);
-
-    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-    attribute::get_val(attribute, &val);
-    val.val.u16 = static_cast<uint16_t>(humidity * 100);
-
-    attribute::update(
-        endpoint_id, RelativeHumidityMeasurement::Id,
-        RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &val);
-  });
-}
 
 static void open_commissioning_window_if_necessary() {
   VerifyOrReturn(chip::Server::GetInstance().GetFabricTable().FabricCount() ==
@@ -151,6 +69,16 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   }
 }
 
+esp_err_t start_matter(void) {
+  /* Matter start */
+  esp_err_t err = esp_matter::start(app_event_cb);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to start Matter, err:%d", err);
+  }
+
+  return err;
+}
+
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by
 // flashing an LED or light).
@@ -176,6 +104,82 @@ app_attribute_update_cb(attribute::callback_type_t type, uint16_t endpoint_id,
   return ESP_OK;
 }
 
-#ifdef __cplusplus
+esp_err_t init_matter(void) {
+  /* Create a Matter node and add the mandatory Root Node device type on
+   * endpoint 0 */
+  node::config_t node_config;
+  node_t *node = node::create(&node_config, app_attribute_update_cb,
+                              app_identification_cb);
+
+  if (node == nullptr) {
+    ESP_LOGE(TAG, "Failed to create Matter node");
+  }
+
+  // add temperature sensor device
+  temperature_sensor::config_t temp_sensor_config;
+  endpoint_t *temp_sensor_ep = temperature_sensor::create(
+      node, &temp_sensor_config, ENDPOINT_FLAG_NONE, NULL);
+  if (temp_sensor_ep == nullptr) {
+    ESP_LOGE(TAG, "Failed to create temperature_sensor endpoint");
+  }
+
+  // add the humidity sensor device
+  humidity_sensor::config_t humidity_sensor_config;
+  endpoint_t *humidity_sensor_ep = humidity_sensor::create(
+      node, &humidity_sensor_config, ENDPOINT_FLAG_NONE, NULL);
+  if (humidity_sensor_ep == nullptr) {
+    ESP_LOGE(TAG, "Failed to create humidity_sensor endpoint");
+  }
+
+  esp_openthread_platform_config_t config = {
+      .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),
+      .host_config = ESP_OPENTHREAD_DEFAULT_HOST_CONFIG(),
+      .port_config = ESP_OPENTHREAD_DEFAULT_PORT_CONFIG(),
+  };
+  set_openthread_platform_config(&config);
+
+  return ESP_OK;
 }
-#endif
+
+//// Application cluster specification, 7.18.2.11. Temperature
+//// represents a temperature on the Celsius scale with a resolution of 0.01°C.
+//// temp = (temperature in °C) x 100
+// static void temp_sensor_notification(uint16_t endpoint_id, float temp,
+//                                      void *user_data) {
+//   // schedule the attribute update so that we can report it from matter
+//   thread chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id,
+//   temp]() {
+//     attribute_t *attribute =
+//         attribute::get(endpoint_id, TemperatureMeasurement::Id);
+//
+//     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+//     attribute::get_val(attribute, &val);
+//     val.val.i16 = static_cast<int16_t>(temp * 100);
+//
+//     attribute::update(endpoint_id, TemperatureMeasurement::Id,
+//                       TemperatureMeasurement::Attributes::MeasuredValue::Id,
+//                       &val);
+//   });
+// }
+//
+//// Application cluster specification, 2.6.4.1. MeasuredValue Attribute
+//// represents the humidity in percent.
+//// humidity = (humidity in %) x 100
+// static void humidity_sensor_notification(uint16_t endpoint_id, float
+// humidity,
+//                                          void *user_data) {
+//   // schedule the attribute update so that we can report it from matter
+//   thread chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id,
+//   humidity]() {
+//     attribute_t *attribute = attribute::get(endpoint_id,
+//     RelativeHumidityMeasurement::Id);
+//
+//     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+//     attribute::get_val(attribute, &val);
+//     val.val.u16 = static_cast<uint16_t>(humidity * 100);
+//
+//     attribute::update(
+//         endpoint_id, RelativeHumidityMeasurement::Id,
+//         RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &val);
+//   });
+// }

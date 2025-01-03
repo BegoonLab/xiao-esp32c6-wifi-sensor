@@ -49,7 +49,17 @@
 #endif
 
 #ifdef CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "sensor_matter.h"
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 static const char *TAG = "sensor_main";

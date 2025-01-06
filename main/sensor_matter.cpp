@@ -37,7 +37,7 @@ static void open_commissioning_window_if_necessary() {
   // credentials and still has IP connectivity so, only advertising on DNS-SD.
   CHIP_ERROR err = commissionMgr.OpenBasicCommissioningWindow(
       chip::System::Clock::Seconds16(300),
-      chip::CommissioningWindowAdvertisement::kDnssdOnly);
+      chip::CommissioningWindowAdvertisement::kAllSupported);
   if (err != CHIP_NO_ERROR) {
     ESP_LOGE(TAG,
              "Failed to open commissioning window, err:%" CHIP_ERROR_FORMAT,
@@ -131,6 +131,13 @@ esp_err_t init_matter(void) {
     ESP_LOGE(TAG, "Failed to create humidity_sensor endpoint");
   }
 
+  pressure_sensor::config_t pressure_sensor_config;
+  endpoint_t *pressure_sensor_ep = pressure_sensor::create(
+      node, &pressure_sensor_config, ENDPOINT_FLAG_NONE, NULL);
+  if (pressure_sensor_ep == nullptr) {
+    ESP_LOGE(TAG, "Failed to create pressure_sensor endpoint");
+  }
+
   esp_openthread_platform_config_t config = {
       .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),
       .host_config = ESP_OPENTHREAD_DEFAULT_HOST_CONFIG(),
@@ -140,46 +147,3 @@ esp_err_t init_matter(void) {
 
   return ESP_OK;
 }
-
-//// Application cluster specification, 7.18.2.11. Temperature
-//// represents a temperature on the Celsius scale with a resolution of 0.01°C.
-//// temp = (temperature in °C) x 100
-// static void temp_sensor_notification(uint16_t endpoint_id, float temp,
-//                                      void *user_data) {
-//   // schedule the attribute update so that we can report it from matter
-//   thread chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id,
-//   temp]() {
-//     attribute_t *attribute =
-//         attribute::get(endpoint_id, TemperatureMeasurement::Id);
-//
-//     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-//     attribute::get_val(attribute, &val);
-//     val.val.i16 = static_cast<int16_t>(temp * 100);
-//
-//     attribute::update(endpoint_id, TemperatureMeasurement::Id,
-//                       TemperatureMeasurement::Attributes::MeasuredValue::Id,
-//                       &val);
-//   });
-// }
-//
-//// Application cluster specification, 2.6.4.1. MeasuredValue Attribute
-//// represents the humidity in percent.
-//// humidity = (humidity in %) x 100
-// static void humidity_sensor_notification(uint16_t endpoint_id, float
-// humidity,
-//                                          void *user_data) {
-//   // schedule the attribute update so that we can report it from matter
-//   thread chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id,
-//   humidity]() {
-//     attribute_t *attribute = attribute::get(endpoint_id,
-//     RelativeHumidityMeasurement::Id);
-//
-//     esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-//     attribute::get_val(attribute, &val);
-//     val.val.u16 = static_cast<uint16_t>(humidity * 100);
-//
-//     attribute::update(
-//         endpoint_id, RelativeHumidityMeasurement::Id,
-//         RelativeHumidityMeasurement::Attributes::MeasuredValue::Id, &val);
-//   });
-// }

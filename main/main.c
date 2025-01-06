@@ -114,5 +114,6 @@ void app_main(void) {
 
 #ifdef CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD
   init_matter();
+  start_matter();
 #endif
 }

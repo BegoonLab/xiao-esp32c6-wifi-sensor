@@ -39,7 +39,8 @@ static void open_commissioning_window_if_necessary() {
       chip::System::Clock::Seconds16(300),
       chip::CommissioningWindowAdvertisement::kAllSupported);
   if (err != CHIP_NO_ERROR) {
-    ESP_LOGE(TAG, "Failed to open commissioning window, err:%", err.Format());
+    ESP_LOGE(TAG, "Failed to open commissioning window, err:%s",
+             err.AsString());
   }
 }
 

@@ -15,13 +15,14 @@
 - [Hardware](#hardware)
 - [Software](#software)
 - [ZigBee](#zigbee)
+- [Matter over Thread](#matter-over-thread)
 - [Contributing](#contributing)
 - [License](#license)
 - [TODO](#todo)
 
 ## Introduction
 
-The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates Wi-Fi connectivity, MQTT messaging, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
+The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates Wi-Fi connectivity, MQTT messaging, ZigBee, Matter over Thread, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
 
 ![introduction.jpg](assets/introduction.jpg)
 
@@ -33,6 +34,7 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 - **Power Management**: Efficiently manages power using LiPo batteries with built-in charge management.
 - **Deep Sleep Mode**: Extends battery life by enabling deep sleep between data transmissions.
 - **ZigBee Connectivity**: Seamless integration with ZigBee networks. Supports standard ZigBee clusters, easily pair your sensor with ZigBee coordinators like Home Assistant.
+- **Matter over Thread Connectivity**: Implements Matter protocol over Thread to enable seamless interoperability with other Matter-compliant devices. Supports smart home ecosystems like Apple HomeKit, Google Home, and Amazon Alexa.
 - **Optional Features**:
   - Battery voltage monitoring
   - Connection duration tracking
@@ -359,6 +361,16 @@ To add the sensor to Home Assistant: go to `Settings` â†’ `Devices & Services` â
 <img alt="SensorXIAO_zb_device.png" src="assets/SensorXIAO_zb_device.png" width="500"/>
 
 _Note_: The SGP41 sensor is not currently supported because the ZigBee protocol does not include VOC and NOx clusters in its specification.
+
+## Matter over Thread
+
+Pairing options:
+
+- Using manual code: `34970112332`
+- Using QR code: `MT:Y.K9042C00KA0648G00`
+- Or scan a QR code bellow:
+
+  <img alt="SensorXIAO_Matter_Pairing_QR.png" src="assets/SensorXIAO_Matter_Pairing_QR.png" width="100"/>
 
 ## Contributing
 

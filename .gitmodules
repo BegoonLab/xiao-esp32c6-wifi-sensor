@@ -10,7 +10,3 @@
 [submodule "vendor/boschsensortec/BME68x_SensorAPI"]
 	path = vendor/boschsensortec/BME68x_SensorAPI
 	url = https://github.com/boschsensortec/BME68x_SensorAPI
-[submodule "vendor/esp-matter"]
-	path = vendor/esp-matter
-	url = https://github.com/espressif/esp-matter.git
-	branch = release/v1.4

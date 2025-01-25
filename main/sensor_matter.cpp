@@ -130,12 +130,83 @@ esp_err_t init_matter(void) {
     ESP_LOGE(TAG, "Failed to create humidity_sensor endpoint");
   }
 
+  // add the pressure sensor device
   pressure_sensor::config_t pressure_sensor_config;
   endpoint_t *pressure_sensor_ep = pressure_sensor::create(
       node, &pressure_sensor_config, ENDPOINT_FLAG_NONE, NULL);
   if (pressure_sensor_ep == nullptr) {
     ESP_LOGE(TAG, "Failed to create pressure_sensor endpoint");
   }
+
+  // Set temperature
+  double temperature = 21.03;
+  uint16_t temp_endpoint_id = endpoint::get_id(temp_sensor_ep);
+  //  chip::DeviceLayer::SystemLayer().ScheduleLambda([temp_endpoint_id,
+  //  temperature, temp_sensor_ep]() {
+  cluster_t *temp_cluster =
+      cluster::get(temp_sensor_ep, TemperatureMeasurement::Id);
+  attribute_t *temp_attribute = attribute::get(
+      temp_cluster, TemperatureMeasurement::Attributes::MeasuredValue::Id);
+  if (temp_attribute == nullptr) {
+    ESP_LOGE(TAG, "Failed to get temp_attribute");
+  }
+
+  esp_matter_attr_val_t temp_val = esp_matter_invalid(NULL);
+  attribute::get_val(temp_attribute, &temp_val);
+  temp_val.val.u16 = static_cast<uint16_t>(temperature * 100);
+  ESP_LOGI(TAG, "temp_endpoint_id %hu", temp_endpoint_id);
+  ESP_LOGI(TAG, "temp_cluster_id %lu", TemperatureMeasurement::Id);
+  ESP_LOGI(TAG, "temp_attribute_id %lu",
+           TemperatureMeasurement::Attributes::MeasuredValue::Id);
+  attribute::update(temp_endpoint_id, TemperatureMeasurement::Id,
+                    TemperatureMeasurement::Attributes::MeasuredValue::Id,
+                    &temp_val);
+  //  });
+
+  // Set humidity
+  double humidity = 47.56;
+  uint16_t humidity_endpoint_id = endpoint::get_id(humidity_sensor_ep);
+  //  chip::DeviceLayer::SystemLayer().ScheduleLambda([humidity_endpoint_id,
+  //  humidity, humidity_sensor_ep]() {
+  cluster_t *humidity_cluster =
+      cluster::get(humidity_sensor_ep, RelativeHumidityMeasurement::Id);
+  attribute_t *humidity_attribute = attribute::get(
+      humidity_cluster,
+      RelativeHumidityMeasurement::Attributes::MeasuredValue::Id);
+  if (humidity_attribute == nullptr) {
+    ESP_LOGE(TAG, "Failed to get humidity_attribute");
+  }
+
+  esp_matter_attr_val_t humidity_val = esp_matter_invalid(NULL);
+  attribute::get_val(humidity_attribute, &humidity_val);
+  humidity_val.val.u16 = static_cast<uint16_t>(humidity * 100);
+
+  attribute::update(humidity_endpoint_id, RelativeHumidityMeasurement::Id,
+                    RelativeHumidityMeasurement::Attributes::MeasuredValue::Id,
+                    &humidity_val);
+  //  });
+
+  // Set pressure
+  double pressure = 1001.34;
+  uint16_t pressure_endpoint_id = endpoint::get_id(pressure_sensor_ep);
+  //  chip::DeviceLayer::SystemLayer().ScheduleLambda([pressure_endpoint_id,
+  //  pressure, pressure_sensor_ep]() {
+  cluster_t *pressure_cluster =
+      cluster::get(pressure_sensor_ep, PressureMeasurement::Id);
+  attribute_t *pressure_attribute = attribute::get(
+      pressure_cluster, PressureMeasurement::Attributes::MeasuredValue::Id);
+  if (pressure_attribute == nullptr) {
+    ESP_LOGE(TAG, "Failed to get pressure_attribute");
+  }
+
+  esp_matter_attr_val_t pressure_val = esp_matter_invalid(NULL);
+  attribute::get_val(pressure_attribute, &pressure_val);
+  pressure_val.val.u16 = static_cast<uint16_t>(pressure * 10);
+
+  attribute::update(pressure_endpoint_id, PressureMeasurement::Id,
+                    PressureMeasurement::Attributes::MeasuredValue::Id,
+                    &pressure_val);
+  //  });
 
   esp_openthread_platform_config_t config = {
       .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),

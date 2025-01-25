@@ -51,18 +51,20 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 ```json
 {
   "ID": "7i29r9k9ltaxmbev",
-  "RSSI": -54,
-  "battery_voltage": 4.13,
-  "temperature": "24.28",
-  "humidity": "29.32",
-  "pressure": "999.54",
-  "connection_duration_ms": 1672
+  "RSSI": -61,
+  "battery_voltage": 3.96,
+  "battery_charge": 76,
+  "temperature": 4.72,
+  "humidity": 67.85,
+  "pressure": 1006.84,
+  "connection_duration_ms": 1411
 }
 ```
 
 - **ID**: Unique identifier of the sensor
 - **RSSI**: Wi-Fi signal strength in dBm
 - **battery_voltage**: Current battery voltage
+- **battery_charge**: Current battery charge percentage
 - **temperature**: Temperature reading from the BME sensor
 - **humidity**: Humidity reading from the BME sensor
 - **pressure**: Pressure reading from the BME sensor
@@ -250,9 +252,15 @@ Follow these steps to set up your Smart IoT Sensor:
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
+   git clone --depth 1 https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
+   ```
+
+   ```bash
    cd xiao-esp32c6-wifi-sensor
-   git submodule update --init --recursive
+   ```
+
+   ```bash
+   python scripts/install.py
    ```
 
 2. **Install Dependencies**
@@ -371,6 +379,8 @@ Pairing options:
 - Or scan a QR code bellow:
 
   <img alt="SensorXIAO_Matter_Pairing_QR.png" src="assets/SensorXIAO_Matter_Pairing_QR.png" width="100"/>
+
+For production use case see the information [here](https://docs.espressif.com/projects/esp-matter/en/latest/esp32c6/production.html#the-esp-matter-mfg-tool-example).
 
 ## Contributing
 

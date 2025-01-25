@@ -22,6 +22,8 @@ void init_gpio(void) {
   gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
   gpio_set_level(GPIO_NUM_3, LOW);
 
+  vTaskDelay(pdMS_TO_TICKS(100));
+
   gpio_reset_pin(GPIO_NUM_14);
   gpio_set_direction(GPIO_NUM_14, GPIO_MODE_OUTPUT);
   gpio_set_level(GPIO_NUM_14, HIGH);

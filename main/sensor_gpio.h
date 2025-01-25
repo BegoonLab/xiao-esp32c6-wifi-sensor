@@ -12,5 +12,6 @@
 
 #pragma once
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
 
 void init_gpio(void);

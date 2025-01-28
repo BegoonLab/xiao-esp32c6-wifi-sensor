@@ -315,14 +315,16 @@ Follow these steps to set up your Smart IoT Sensor:
 
 ### Building the Firmware
 
-1. **Install ESP-IDF**
-
-   Follow the [ESP-IDF Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html) to set up the development environment.
-
+1. **Build dockerized environment**
+   ```bash
+   docker build ./ci/docker/ -t esp_idf_xiao_esp32c6_sensor:latest
+   ```
 2. **Configure the Project**
 
    ```bash
-   idf.py menuconfig
+   docker run --rm -it -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
    ```
 
    - Set Wi-Fi credentials
@@ -332,7 +334,16 @@ Follow these steps to set up your Smart IoT Sensor:
 3. **Build and Flash**
 
    ```bash
-   idf.py build
+   docker run --rm -t -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py build
+   ```
+
+   ```bash
+   docker run --device=<TARGET_PORT> \
+   --rm -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   -it esp_idf_xiao_esp32c6_sensor:latest \
    idf.py -p <TARGET_PORT> flash
    ```
 

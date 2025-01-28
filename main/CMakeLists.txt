@@ -1,5 +1,5 @@
 if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
-  set(ESP_MATTER_SDK_PATH "../vendor/esp-matter")
+  set(ESP_MATTER_SDK_PATH "/opt/esp/esp-matter")
 
   get_filename_component(
     MATTER_SDK_PATH ${ESP_MATTER_SDK_PATH}/connectedhomeip/connectedhomeip/
@@ -480,21 +480,33 @@ if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
   endif()
 endif()
 
+list(APPEND INCLUDE_DIRS_LIST "${ESP_MATTER_SDK_PATH}/examples/common"
+     "${MATTER_SDK_PATH}/config/esp32/components"
+     "${ESP_MATTER_SDK_PATH}/components")
+
+list(
+  APPEND
+  INCLUDE_DIRS_LIST
+  "."
+  "../vendor/embedded-i2c-sgp41"
+  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
+  "../vendor/boschsensortec/BME280_SensorAPI"
+  "../vendor/boschsensortec/BME68x_SensorAPI")
+
+list(
+  APPEND
+  SRC_DIRS_LIST
+  "."
+  "../vendor/embedded-i2c-sgp41"
+  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
+  "../vendor/boschsensortec/BME280_SensorAPI"
+  "../vendor/boschsensortec/BME68x_SensorAPI")
+
 idf_component_register(
   INCLUDE_DIRS
   ${INCLUDE_DIRS_LIST}
-  "."
-  "../vendor/embedded-i2c-sgp41"
-  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
-  "../vendor/boschsensortec/BME280_SensorAPI"
-  "../vendor/boschsensortec/BME68x_SensorAPI"
   SRC_DIRS
   ${SRC_DIRS_LIST}
-  "."
-  "../vendor/embedded-i2c-sgp41"
-  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
-  "../vendor/boschsensortec/BME280_SensorAPI"
-  "../vendor/boschsensortec/BME68x_SensorAPI"
   EXCLUDE_SRCS
   ${EXCLUDE_SRCS_LIST}
   PRIV_INCLUDE_DIRS

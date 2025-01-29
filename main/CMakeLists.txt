@@ -339,129 +339,110 @@ if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
          "${MATTER_SDK_PATH}/src/tracing/esp32_trace/include")
   endif()
 
-  if(CONFIG_CHIP_ENABLE_EXTERNAL_PLATFORM)
-    # check the source file dir if external platform is enable
-    if((EXISTS ${CONFIG_CHIP_EXTERNAL_PLATFORM_DIR}/external_platform.cmake))
-      include(${CONFIG_CHIP_EXTERNAL_PLATFORM_DIR}/external_platform.cmake)
-      list(APPEND SRC_DIRS_LIST ${EXPLANT_SRC_DIRS_LIST})
-      list(APPEND INCLUDE_DIRS_LIST ${EXPLANT_INCLUDE_DIRS_LIST})
-      list(APPEND EXCLUDE_SRCS_LIST ${EXPLANT_EXCLUDE_SRCS_LIST})
-    else()
-      message(
-        FATAL_ERROR
-          "CONFIG_CHIP_ENABLE_EXTERNAL_PLATFORM is set, but CONFIG_CHIP_EXTERNAL_PLATFORM_DIR is not set correctly!"
-      )
-    endif()
-  else()
-    list(APPEND SRC_DIRS_LIST "${MATTER_SDK_PATH}/src/platform/ESP32"
-         "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook")
+  list(APPEND SRC_DIRS_LIST "${MATTER_SDK_PATH}/src/platform/ESP32"
+       "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook")
 
+  list(
+    APPEND
+    INCLUDE_DIRS_LIST
+    "${MATTER_SDK_PATH}/src/platform/ESP32"
+    "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid"
+    "${MATTER_SDK_PATH}/src/platform/ESP32/nimble"
+    "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook")
+
+  if(CONFIG_USE_MINIMAL_MDNS)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/DnssdImpl.cpp")
+  endif()
+
+  if((CONFIG_USE_MINIMAL_MDNS) OR ((NOT CONFIG_ENABLE_WIFI_STATION)
+                                   AND (NOT CONFIG_ENABLE_WIFI_AP)))
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/WiFiDnssdImpl.cpp")
+  endif()
+
+  if((NOT CONFIG_ENABLE_WIFI_STATION) AND (NOT CONFIG_ENABLE_WIFI_AP))
     list(
       APPEND
-      INCLUDE_DIRS_LIST
-      "${MATTER_SDK_PATH}/src/platform/ESP32"
-      "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid"
-      "${MATTER_SDK_PATH}/src/platform/ESP32/nimble"
-      "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook")
+      EXCLUDE_SRCS_LIST
+      "${MATTER_SDK_PATH}/src/platform/ESP32/ConnectivityManagerImpl_WiFi.cpp"
+      "${MATTER_SDK_PATH}/src/platform/ESP32/NetworkCommissioningDriver.cpp"
+      "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteHook.c"
+      "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteTable.c")
+  endif()
 
-    if(CONFIG_USE_MINIMAL_MDNS)
+  if(NOT CONFIG_ENABLE_ROUTE_HOOK)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteHook.c"
+         "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteTable.c")
+  endif()
+
+  if((CONFIG_BT_ENABLED) AND (CONFIG_ENABLE_CHIPOBLE))
+    if(CONFIG_BT_NIMBLE_ENABLED)
+      list(APPEND SRC_DIRS_LIST "${MATTER_SDK_PATH}/src/platform/ESP32/nimble")
       list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/DnssdImpl.cpp")
-    endif()
-
-    if((CONFIG_USE_MINIMAL_MDNS) OR ((NOT CONFIG_ENABLE_WIFI_STATION)
-                                     AND (NOT CONFIG_ENABLE_WIFI_AP)))
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/WiFiDnssdImpl.cpp")
-    endif()
-
-    if((NOT CONFIG_ENABLE_WIFI_STATION) AND (NOT CONFIG_ENABLE_WIFI_AP))
-      list(
-        APPEND
-        EXCLUDE_SRCS_LIST
-        "${MATTER_SDK_PATH}/src/platform/ESP32/ConnectivityManagerImpl_WiFi.cpp"
-        "${MATTER_SDK_PATH}/src/platform/ESP32/NetworkCommissioningDriver.cpp"
-        "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteHook.c"
-        "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteTable.c")
-    endif()
-
-    if(NOT CONFIG_ENABLE_ROUTE_HOOK)
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteHook.c"
-           "${MATTER_SDK_PATH}/src/platform/ESP32/route_hook/ESP32RouteTable.c")
-    endif()
-
-    if((CONFIG_BT_ENABLED) AND (CONFIG_ENABLE_CHIPOBLE))
-      if(CONFIG_BT_NIMBLE_ENABLED)
-        list(APPEND SRC_DIRS_LIST
-             "${MATTER_SDK_PATH}/src/platform/ESP32/nimble")
+           "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid/BLEManagerImpl.cpp")
+      if(NOT CONFIG_ENABLE_ESP32_BLE_CONTROLLER)
         list(
-          APPEND EXCLUDE_SRCS_LIST
-          "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid/BLEManagerImpl.cpp")
-        if(NOT CONFIG_ENABLE_ESP32_BLE_CONTROLLER)
-          list(
-            APPEND
-            EXCLUDE_SRCS_LIST
-            "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid/ChipDeviceScanner.cpp"
-          )
-        endif()
-      else()
-        list(APPEND SRC_DIRS_LIST
-             "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid")
-        list(APPEND EXCLUDE_SRCS_LIST
-             "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/BLEManagerImpl.cpp")
-        if(NOT CONFIG_ENABLE_ESP32_BLE_CONTROLLER)
-          list(
-            APPEND
-            EXCLUDE_SRCS_LIST
-            "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/ChipDeviceScanner.cpp"
-            "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/misc.c"
-            "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/peer.c")
-        endif()
+          APPEND
+          EXCLUDE_SRCS_LIST
+          "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid/ChipDeviceScanner.cpp"
+        )
+      endif()
+    else()
+      list(APPEND SRC_DIRS_LIST
+           "${MATTER_SDK_PATH}/src/platform/ESP32/bluedroid")
+      list(APPEND EXCLUDE_SRCS_LIST
+           "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/BLEManagerImpl.cpp")
+      if(NOT CONFIG_ENABLE_ESP32_BLE_CONTROLLER)
+        list(
+          APPEND
+          EXCLUDE_SRCS_LIST
+          "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/ChipDeviceScanner.cpp"
+          "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/misc.c"
+          "${MATTER_SDK_PATH}/src/platform/ESP32/nimble/peer.c")
       endif()
     endif()
+  endif()
 
-    if(NOT CONFIG_ENABLE_ETHERNET_TELEMETRY)
-      list(
-        APPEND
-        EXCLUDE_SRCS_LIST
-        "${MATTER_SDK_PATH}/src/platform/ESP32/ConnectivityManagerImpl_Ethernet.cpp"
-        "${MATTER_SDK_PATH}/src/platform/ESP32/NetworkCommissioningDriver_Ethernet.cpp"
-      )
-    endif()
+  if(NOT CONFIG_ENABLE_ETHERNET_TELEMETRY)
+    list(
+      APPEND
+      EXCLUDE_SRCS_LIST
+      "${MATTER_SDK_PATH}/src/platform/ESP32/ConnectivityManagerImpl_Ethernet.cpp"
+      "${MATTER_SDK_PATH}/src/platform/ESP32/NetworkCommissioningDriver_Ethernet.cpp"
+    )
+  endif()
 
-    if((NOT CONFIG_OPENTHREAD_ENABLED) OR (NOT CONFIG_ENABLE_MATTER_OVER_THREAD
-                                          ))
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/OpenthreadLauncher.cpp"
-           "${MATTER_SDK_PATH}/src/platform/ESP32/ThreadStackManagerImpl.cpp")
-    endif()
+  if((NOT CONFIG_OPENTHREAD_ENABLED) OR (NOT CONFIG_ENABLE_MATTER_OVER_THREAD))
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/OpenthreadLauncher.cpp"
+         "${MATTER_SDK_PATH}/src/platform/ESP32/ThreadStackManagerImpl.cpp")
+  endif()
 
-    if(NOT CONFIG_ENABLE_OTA_REQUESTOR)
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/OTAImageProcessorImpl.cpp")
-    endif()
+  if(NOT CONFIG_ENABLE_OTA_REQUESTOR)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/OTAImageProcessorImpl.cpp")
+  endif()
 
-    if(NOT CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER)
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32FactoryDataProvider.cpp")
-    endif()
+  if(NOT CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32FactoryDataProvider.cpp")
+  endif()
 
-    if(NOT CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER)
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32DeviceInfoProvider.cpp")
-    endif()
+  if(NOT CONFIG_ENABLE_ESP32_DEVICE_INFO_PROVIDER)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32DeviceInfoProvider.cpp")
+  endif()
 
-    if(NOT CONFIG_SEC_CERT_DAC_PROVIDER)
-      list(
-        APPEND EXCLUDE_SRCS_LIST
-        "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32SecureCertDACProvider.cpp")
-    endif()
+  if(NOT CONFIG_SEC_CERT_DAC_PROVIDER)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32SecureCertDACProvider.cpp")
+  endif()
 
-    if(NOT CONFIG_USE_ESP32_ECDSA_PERIPHERAL)
-      list(APPEND EXCLUDE_SRCS_LIST
-           "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32CHIPCryptoPAL.cpp")
-    endif()
+  if(NOT CONFIG_USE_ESP32_ECDSA_PERIPHERAL)
+    list(APPEND EXCLUDE_SRCS_LIST
+         "${MATTER_SDK_PATH}/src/platform/ESP32/ESP32CHIPCryptoPAL.cpp")
   endif()
 
   if(NOT CONFIG_ENABLE_CHIPOBLE)
@@ -478,29 +459,37 @@ if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
   if(CONFIG_ENABLE_ICD_SERVER)
     list(APPEND SRC_DIRS_LIST "${MATTER_SDK_PATH}/src/app/icd/server/")
   endif()
+
+  # list(APPEND INCLUDE_DIRS_LIST "${ESP_MATTER_SDK_PATH}/examples/common"
+  # "${MATTER_SDK_PATH}/config/esp32/components"
+  # "${ESP_MATTER_SDK_PATH}/components")
+
+  set(EXTRA_COMPONENT_DIRS
+      "${ESP_MATTER_SDK_PATH}/examples/common"
+      "${MATTER_SDK_PATH}/config/esp32/components"
+      "${ESP_MATTER_SDK_PATH}/components" ${extra_components_dirs_append})
+
 endif()
 
-list(APPEND INCLUDE_DIRS_LIST "${ESP_MATTER_SDK_PATH}/examples/common"
-     "${MATTER_SDK_PATH}/config/esp32/components"
-     "${ESP_MATTER_SDK_PATH}/components")
+if(CONFIG_SENSOR_SGP41)
+  list(APPEND INCLUDE_DIRS_LIST "../vendor/embedded-i2c-sgp41"
+       "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm")
 
-list(
-  APPEND
-  INCLUDE_DIRS_LIST
-  "."
-  "../vendor/embedded-i2c-sgp41"
-  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
-  "../vendor/boschsensortec/BME280_SensorAPI"
-  "../vendor/boschsensortec/BME68x_SensorAPI")
+  list(APPEND SRC_DIRS_LIST "../vendor/embedded-i2c-sgp41"
+       "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm")
+endif()
 
-list(
-  APPEND
-  SRC_DIRS_LIST
-  "."
-  "../vendor/embedded-i2c-sgp41"
-  "../vendor/gas-index-algorithm/sensirion_gas_index_algorithm"
-  "../vendor/boschsensortec/BME280_SensorAPI"
-  "../vendor/boschsensortec/BME68x_SensorAPI")
+if(CONFIG_SENSOR_BME280 OR CONFIG_SENSOR_BME680)
+  list(APPEND INCLUDE_DIRS_LIST "../vendor/boschsensortec/BME280_SensorAPI"
+       "../vendor/boschsensortec/BME68x_SensorAPI")
+
+  list(APPEND SRC_DIRS_LIST "../vendor/boschsensortec/BME280_SensorAPI"
+       "../vendor/boschsensortec/BME68x_SensorAPI")
+endif()
+
+list(APPEND INCLUDE_DIRS_LIST ".")
+
+list(APPEND SRC_DIRS_LIST ".")
 
 idf_component_register(
   INCLUDE_DIRS
@@ -513,8 +502,6 @@ idf_component_register(
   ${PRIV_INCLUDE_DIRS_LIST}
   REQUIRES
   ${REQUIRE_COMPONENTS})
-
-set_property(TARGET ${COMPONENT_LIB} PROPERTY CXX_STANDARD 17)
 
 if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
   target_compile_options(
@@ -537,6 +524,14 @@ if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
     APPEND)
   idf_build_set_property(COMPILE_OPTIONS "-Wno-error=array-bounds" APPEND)
   idf_build_set_property(COMPILE_OPTIONS "-Wno-write-strings" APPEND)
+
+  # For Xtensa chips, uint32_t was defined as 'unsigned' before v5.0, and after
+  # IDF v5.0 it is defined as 'unsigned long', same as RISC-V. add this compile
+  # option to avoid format errors.
+  # https://github.com/espressif/esp-idf/issues/6906#issuecomment-1207373706
+  if(CONFIG_IDF_TARGET_ARCH_XTENSA AND (${IDF_VERSION_MAJOR} LESS 5))
+    idf_build_set_property(COMPILE_OPTIONS "-Wno-format" APPEND)
+  endif()
 
   # Time sync client feature depends on read client, disable it when read client
   # is disabled.
@@ -583,7 +578,4 @@ if(CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD)
     ${COMPONENT_LIB} INTERFACE -Wl,--start-group ${chip_libraries}
                                -Wl,--end-group)
 
-  idf_build_set_property(
-    CXX_COMPILE_OPTIONS
-    "-std=gnu++17;-Os;-DCHIP_HAVE_CONFIG_H;-Wno-overloaded-virtual" APPEND)
 endif()

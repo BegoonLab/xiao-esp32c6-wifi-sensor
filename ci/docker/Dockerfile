@@ -37,6 +37,11 @@ RUN set -x \
     && ./install.sh \
     && : # last line
 
+RUN set -x \
+    && git config --global --add safe.directory /opt/esp/project \
+    && git config --global --add safe.directory /opt/esp/idf/components/openthread/openthread \
+    && : # last line
+
 COPY entrypoint.sh /opt/esp/entrypoint.sh
 ENTRYPOINT [ "/opt/esp/entrypoint.sh" ]
 CMD [ "/bin/bash" ]

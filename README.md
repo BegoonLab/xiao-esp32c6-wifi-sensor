@@ -334,7 +334,8 @@ Follow these steps to set up your Smart IoT Sensor:
 3. **Build and Flash**
 
    ```bash
-   docker run --rm -t -v $PWD:/opt/esp/project \
+   docker run --rm -t \
+   -v $PWD:/opt/esp/project \
    -w /opt/esp/project \
    esp_idf_xiao_esp32c6_sensor:latest idf.py build
    ```

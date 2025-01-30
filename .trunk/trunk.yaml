@@ -2,35 +2,40 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.22.8
+  version: 1.22.9
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
     - id: trunk
-      ref: v1.6.6
+      ref: v1.6.7
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
   enabled:
+    - go@1.21.0
     - node@18.20.5
     - python@3.10.8
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   enabled:
+    - actionlint@1.7.7
+    - hadolint@2.12.1-beta
+    - shellcheck@0.10.0
+    - shfmt@3.6.0
     - taplo@0.9.3
     - clang-format@16.0.3
     - cmake-format@0.6.13
     - clang-tidy@16.0.3
-    - bandit@1.8.0
-    - black@24.10.0
-    - checkov@3.2.344
+    - bandit@1.8.2
+    - black@25.1.0
+    - checkov@3.2.358
     - git-diff-check
-    - isort@5.13.2
-    - markdownlint@0.43.0
+    - isort@6.0.0
+    - markdownlint@0.44.0
     - oxipng@9.1.3
     - prettier@3.4.2
-    - ruff@0.8.4
-    - trufflehog@3.88.0
+    - ruff@0.9.3
+    - trufflehog@3.88.3
     - yamllint@1.35.1
   ignore:
     - linters: [ALL]
@@ -40,6 +45,7 @@ lint:
         - venv/**
         - cmake-*/**
         - vendor/**
+        - ci/docker/Dockerfile
 actions:
   enabled:
     - trunk-announce

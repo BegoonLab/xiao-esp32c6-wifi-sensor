@@ -311,7 +311,7 @@ Follow these steps to set up your Smart IoT Sensor:
 
 ### Dependencies
 
-- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html#software) for Espressif chips.
+- **Docker**: [Install docker](https://docs.docker.com/engine/install/).
 
 ### Building the Firmware
 
@@ -353,14 +353,20 @@ When a sensor misbehaves, it's helpful to output logs to diagnose the issue. By 
 
 1. Open the configuration menu:
    ```bash
-   idf.py menuconfig
+   docker run --rm -it \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
    ```
 2. Navigate to:
    `Component config` → `Log output` → `Default log verbosity`.
 3. Set the verbosity level to `Info`.
 4. Save the changes, and then execute the following command to build, flash, and monitor:
    ```bash
-   idf.py -p <TARGET_PORT> build flash monitor
+   docker run --device=<TARGET_PORT> \
+    --rm -v $PWD:/opt/esp/project \
+    -w /opt/esp/project \
+    -it esp_idf_xiao_esp32c6_sensor:latest idf.py -p <TARGET_PORT> build flash monitor
    ```
 
 ## ZigBee
@@ -368,7 +374,10 @@ When a sensor misbehaves, it's helpful to output logs to diagnose the issue. By 
 ZigBee can be activated in the menu:
 
 ```bash
-idf.py menuconfig
+docker run --rm -it \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
 ```
 
 Navigate to `XIAO Sensor Configuration` → `Select Sensor Connection Type` → `ZigBee`.

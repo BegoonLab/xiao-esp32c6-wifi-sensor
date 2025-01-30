@@ -15,13 +15,14 @@
 - [Hardware](#hardware)
 - [Software](#software)
 - [ZigBee](#zigbee)
+- [Matter over Thread](#matter-over-thread)
 - [Contributing](#contributing)
 - [License](#license)
 - [TODO](#todo)
 
 ## Introduction
 
-The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates Wi-Fi connectivity, MQTT messaging, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
+The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](https://wiki.seeedstudio.com/xiao_esp32c6_getting_started/) tiny board. It integrates Wi-Fi connectivity, MQTT messaging, ZigBee, Matter over Thread, environmental sensing with BME280/BME680 sensors, and robust power management, making it an ideal solution for smart home and IoT applications.
 
 ![introduction.jpg](assets/introduction.jpg)
 
@@ -33,6 +34,7 @@ The Smart IoT Sensor is a power-efficient device built using the [XIAO ESP32C6](
 - **Power Management**: Efficiently manages power using LiPo batteries with built-in charge management.
 - **Deep Sleep Mode**: Extends battery life by enabling deep sleep between data transmissions.
 - **ZigBee Connectivity**: Seamless integration with ZigBee networks. Supports standard ZigBee clusters, easily pair your sensor with ZigBee coordinators like Home Assistant.
+- **Matter over Thread Connectivity**: Implements Matter protocol over Thread to enable seamless interoperability with other Matter-compliant devices. Supports smart home ecosystems like Apple HomeKit, Google Home, and Amazon Alexa.
 - **Optional Features**:
   - Battery voltage monitoring
   - Connection duration tracking
@@ -49,18 +51,20 @@ The sensor publishes data to an MQTT broker in the following JSON format:
 ```json
 {
   "ID": "7i29r9k9ltaxmbev",
-  "RSSI": -54,
-  "battery_voltage": 4.13,
-  "temperature": "24.28",
-  "humidity": "29.32",
-  "pressure": "999.54",
-  "connection_duration_ms": 1672
+  "RSSI": -61,
+  "battery_voltage": 3.96,
+  "battery_charge": 76,
+  "temperature": 4.72,
+  "humidity": 67.85,
+  "pressure": 1006.84,
+  "connection_duration_ms": 1411
 }
 ```
 
 - **ID**: Unique identifier of the sensor
 - **RSSI**: Wi-Fi signal strength in dBm
 - **battery_voltage**: Current battery voltage
+- **battery_charge**: Current battery charge percentage
 - **temperature**: Temperature reading from the BME sensor
 - **humidity**: Humidity reading from the BME sensor
 - **pressure**: Pressure reading from the BME sensor
@@ -248,9 +252,15 @@ Follow these steps to set up your Smart IoT Sensor:
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
+   git clone --depth 1 https://github.com/BegoonLab/xiao-esp32c6-wifi-sensor
+   ```
+
+   ```bash
    cd xiao-esp32c6-wifi-sensor
-   git submodule update --init --recursive
+   ```
+
+   ```bash
+   python scripts/install.py
    ```
 
 2. **Install Dependencies**
@@ -301,18 +311,21 @@ Follow these steps to set up your Smart IoT Sensor:
 
 ### Dependencies
 
-- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html#software) for Espressif chips.
+- **Docker**: [Install docker](https://docs.docker.com/engine/install/).
 
 ### Building the Firmware
 
-1. **Install ESP-IDF**
-
-   Follow the [ESP-IDF Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/v5.3.1/esp32/get-started/index.html) to set up the development environment.
-
+1. **Build dockerized environment**
+   ```bash
+   docker build ./ci/docker/ -t esp_idf_xiao_esp32c6_sensor:latest
+   ```
 2. **Configure the Project**
 
    ```bash
-   idf.py menuconfig
+   docker run --rm -it \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
    ```
 
    - Set Wi-Fi credentials
@@ -322,7 +335,17 @@ Follow these steps to set up your Smart IoT Sensor:
 3. **Build and Flash**
 
    ```bash
-   idf.py build
+   docker run --rm -t \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py build
+   ```
+
+   ```bash
+   docker run --device=<TARGET_PORT> \
+   --rm -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   -it esp_idf_xiao_esp32c6_sensor:latest \
    idf.py -p <TARGET_PORT> flash
    ```
 
@@ -330,14 +353,20 @@ When a sensor misbehaves, it's helpful to output logs to diagnose the issue. By 
 
 1. Open the configuration menu:
    ```bash
-   idf.py menuconfig
+   docker run --rm -it \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
    ```
 2. Navigate to:
    `Component config` → `Log output` → `Default log verbosity`.
 3. Set the verbosity level to `Info`.
 4. Save the changes, and then execute the following command to build, flash, and monitor:
    ```bash
-   idf.py -p <TARGET_PORT> build flash monitor
+   docker run --device=<TARGET_PORT> \
+    --rm -v $PWD:/opt/esp/project \
+    -w /opt/esp/project \
+    -it esp_idf_xiao_esp32c6_sensor:latest idf.py -p <TARGET_PORT> build flash monitor
    ```
 
 ## ZigBee
@@ -345,7 +374,10 @@ When a sensor misbehaves, it's helpful to output logs to diagnose the issue. By 
 ZigBee can be activated in the menu:
 
 ```bash
-idf.py menuconfig
+docker run --rm -it \
+   -v $PWD:/opt/esp/project \
+   -w /opt/esp/project \
+   esp_idf_xiao_esp32c6_sensor:latest idf.py menuconfig
 ```
 
 Navigate to `XIAO Sensor Configuration` → `Select Sensor Connection Type` → `ZigBee`.
@@ -359,6 +391,18 @@ To add the sensor to Home Assistant: go to `Settings` → `Devices & Services` �
 <img alt="SensorXIAO_zb_device.png" src="assets/SensorXIAO_zb_device.png" width="500"/>
 
 _Note_: The SGP41 sensor is not currently supported because the ZigBee protocol does not include VOC and NOx clusters in its specification.
+
+## Matter over Thread
+
+Pairing options:
+
+- Using manual code: `34970112332`
+- Using QR code: `MT:Y.K9042C00KA0648G00`
+- Or scan a QR code bellow:
+
+  <img alt="SensorXIAO_Matter_Pairing_QR.png" src="assets/SensorXIAO_Matter_Pairing_QR.png" width="100"/>
+
+For production use case see the information [here](https://docs.espressif.com/projects/esp-matter/en/latest/esp32c6/production.html#the-esp-matter-mfg-tool-example).
 
 ## Contributing
 

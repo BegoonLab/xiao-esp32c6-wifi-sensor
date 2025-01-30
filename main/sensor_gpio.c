@@ -16,10 +16,13 @@
 
 void init_gpio(void) {
 #if defined(CONFIG_WIFI_ANTENNA_EXTERNAL) ||                                   \
-    defined(CONFIG_ZIGBEE_ANTENNA_EXTERNAL)
+    defined(CONFIG_ZIGBEE_ANTENNA_EXTERNAL) ||                                 \
+    defined(CONFIG_MATTER_OVER_THREAD_ANTENNA_EXTERNAL)
   gpio_reset_pin(GPIO_NUM_3);
   gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
   gpio_set_level(GPIO_NUM_3, LOW);
+
+  vTaskDelay(pdMS_TO_TICKS(100));
 
   gpio_reset_pin(GPIO_NUM_14);
   gpio_set_direction(GPIO_NUM_14, GPIO_MODE_OUTPUT);

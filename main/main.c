@@ -48,6 +48,20 @@
 #include "sensor_sgp.h"
 #endif
 
+#ifdef CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "sensor_matter.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
 static const char *TAG = "sensor_main";
 
 char sensor_id[SENSOR_ID_MAX_LEN] = {0};
@@ -55,11 +69,12 @@ SensorData sensor_data;
 
 void app_main(void) {
   init_sensor_data(&sensor_data);
+  ESP_LOGI(TAG, "FW version: %s", GIT_COMMIT_HASH);
+
 #ifdef CONFIG_ENABLE_BATTERY_CHECK
   init_adc();
   check_battery(&sensor_data);
   ESP_LOGI(TAG, "Battery Voltage: %.2f V", sensor_data.battery.voltage);
-  ESP_LOGI(TAG, "FW version: %s", GIT_COMMIT_HASH);
   deinit_adc();
 #endif
 
@@ -95,5 +110,10 @@ void app_main(void) {
 #ifdef CONFIG_SENSOR_CONNECTION_ZIGBEE
   init_zb();
   start_zb();
+#endif
+
+#ifdef CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD
+  init_matter();
+  start_matter();
 #endif
 }

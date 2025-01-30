@@ -15,6 +15,7 @@
 static i2c_master_bus_handle_t bus_handle;
 
 void init_i2c(void) {
+#ifdef MASTER_I2C_PORT
   i2c_master_bus_config_t i2c_mst_config = {
       .clk_source = I2C_CLK_SRC_DEFAULT,
       .i2c_port = MASTER_I2C_PORT,
@@ -24,6 +25,7 @@ void init_i2c(void) {
   };
 
   ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
+#endif
 }
 
 // Get or create a device handle for the given address
@@ -46,4 +48,8 @@ void release_i2c_device(i2c_master_dev_handle_t dev_handle) {
   ESP_ERROR_CHECK(i2c_master_bus_rm_device(dev_handle));
 }
 
-void deinit_i2c(void) { ESP_ERROR_CHECK(i2c_del_master_bus(bus_handle)); }
+void deinit_i2c(void) {
+#ifdef MASTER_I2C_PORT
+  ESP_ERROR_CHECK(i2c_del_master_bus(bus_handle));
+#endif
+}

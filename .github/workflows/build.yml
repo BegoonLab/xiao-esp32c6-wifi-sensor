@@ -51,6 +51,21 @@ jobs:
         with:
           push: true
           context: ./ci/docker/
-          tags: esp_idf_xiao_esp32c6_sensor:latest
+          tags: ghcr.io/BegoonLab/esp_idf_xiao_esp32c6_sensor:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  build_for_wifi:
+    name: Build firmware for WiFi setup
+    runs-on: ubuntu-latest
+    needs: build_docker_image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build firmware
+        run: |
+          docker run --rm -t \
+             -v $PWD:/opt/esp/project \
+             -w /opt/esp/project \
+             ghcr.io/BegoonLab/esp_idf_xiao_esp32c6_sensor:latest idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.ci.wifi" build

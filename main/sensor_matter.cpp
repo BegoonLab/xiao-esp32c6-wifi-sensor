@@ -10,6 +10,8 @@
  *            All rights reserved.
  */
 
+#ifdef CONFIG_SENSOR_CONNECTION_MATTER_OVER_THREAD
+
 #include "sensor_matter.h"
 #include "esp_matter.h"
 #include "esp_matter_ota.h"
@@ -217,3 +219,5 @@ esp_err_t init_matter(void) {
 
   return ESP_OK;
 }
+
+#endif

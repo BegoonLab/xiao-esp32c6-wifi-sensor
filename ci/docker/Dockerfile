@@ -40,6 +40,8 @@ RUN set -x \
 RUN set -x \
     && git config --global --add safe.directory /opt/esp/project \
     && git config --global --add safe.directory /opt/esp/idf/components/openthread/openthread \
+    && mkdir -p /.cache/Espressif/ComponentManager \
+    && chmod -R 755 /.cache/Espressif/ComponentManager \
     && : # last line
 
 COPY entrypoint.sh /opt/esp/entrypoint.sh

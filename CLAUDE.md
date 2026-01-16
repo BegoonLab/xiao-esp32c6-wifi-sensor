@@ -8,7 +8,7 @@ This is a power-efficient IoT environmental sensor built on the XIAO ESP32C6 mic
 
 ## Build Commands
 
-This project uses ESP-IDF v5.3.1 with CMake. You must have ESP-IDF installed locally.
+This project uses ESP-IDF v5.5.1 with CMake. You must have ESP-IDF installed locally.
 
 ```bash
 # Clone with submodules

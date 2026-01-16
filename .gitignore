@@ -23,4 +23,3 @@ cmake-*
 /sdkconfig
 dependencies.lock
 managed_components
-venv

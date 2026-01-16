@@ -43,8 +43,8 @@ esp_err_t init_wifi_sta(void) {
           {
               .ssid = CONFIG_ESP_WIFI_SSID,
               .password = CONFIG_ESP_WIFI_PASSWORD,
-              // WPA2-PSK only
-              .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+              // WPA3-PSK only
+              .threshold.authmode = WIFI_AUTH_WPA3_PSK,
           },
   };
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

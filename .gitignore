@@ -23,3 +23,4 @@ cmake-*
 /sdkconfig
 dependencies.lock
 managed_components
+compile_commands.json

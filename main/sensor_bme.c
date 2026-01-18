@@ -36,9 +36,8 @@ static struct bme280_dev dev;
 static struct bme280_settings settings;
 
 static i2c_master_dev_handle_t bme280_i2c_handle;
-#endif
 
-void bme280_init_after_sleep() {
+static void bme280_init_after_sleep(void) {
   int8_t rslt = bme280_init(&dev);
   bme280_error_codes_print_result("bme280_init", rslt);
 
@@ -60,6 +59,7 @@ void bme280_init_after_sleep() {
   rslt = bme280_set_sensor_settings(BME280_SEL_ALL_SETTINGS, &settings, &dev);
   bme280_error_codes_print_result("bme280_set_sensor_settings", rslt);
 }
+#endif
 
 void init_bme(void) {
 

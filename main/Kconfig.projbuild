@@ -30,59 +30,13 @@ menu "XIAO Sensor Configuration"
             string "WiFi Password"
             default "mypassword"
             help
-                WiFi password (WPA or WPA2) for the sensor to use.
-
-        choice ESP_WIFI_SAE_MODE
-            prompt "WPA3 SAE mode selection"
-            default ESP_WPA3_SAE_PWE_BOTH
-            help
-                Select mode for SAE as Hunt and Peck, H2E or both.
-            config ESP_WPA3_SAE_PWE_HUNT_AND_PECK
-                bool "HUNT AND PECK"
-            config ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT
-                bool "H2E"
-            config ESP_WPA3_SAE_PWE_BOTH
-                bool "BOTH"
-        endchoice
-
-        config ESP_WIFI_PW_ID
-            string "PASSWORD IDENTIFIER"
-            depends on  ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT || ESP_WPA3_SAE_PWE_BOTH
-            default ""
-            help
-                password identifier for SAE H2E
+                WiFi password (WPA3-PSK) for the sensor to use.
 
         config ESP_MAXIMUM_RETRY
             int "Maximum retry"
             default 5
             help
                 Set the maximum retry to avoid the station reconnecting to the AP indefinitely when the AP is nonexistent.
-
-        choice ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD
-            prompt "WiFi Scan auth mode threshold"
-            default ESP_WIFI_AUTH_WPA2_PSK
-            help
-                The weakest auth mode to accept in scan mode.
-                Defaults to ESP_WIFI_AUTH_WPA2_PSK if a password is present and ESP_WIFI_AUTH_OPEN is used.
-                Select ESP_WIFI_AUTH_WEP/ESP_WIFI_AUTH_WPA_PSK if the AP is operating in WEP/WPA mode.
-
-            config ESP_WIFI_AUTH_OPEN
-                bool "OPEN"
-            config ESP_WIFI_AUTH_WEP
-                bool "WEP"
-            config ESP_WIFI_AUTH_WPA_PSK
-                bool "WPA PSK"
-            config ESP_WIFI_AUTH_WPA2_PSK
-                bool "WPA2 PSK"
-            config ESP_WIFI_AUTH_WPA_WPA2_PSK
-                bool "WPA/WPA2 PSK"
-            config ESP_WIFI_AUTH_WPA3_PSK
-                bool "WPA3 PSK"
-            config ESP_WIFI_AUTH_WPA2_WPA3_PSK
-                bool "WPA2/WPA3 PSK"
-            config ESP_WIFI_AUTH_WAPI_PSK
-                bool "WAPI PSK"
-        endchoice
 
         config ESP_WIFI_COUNTRY_CODE
             string "WiFi Country Code"

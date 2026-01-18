@@ -37,7 +37,6 @@ lint:
       paths:
         - managed_components/**
         - build/**
-        - venv/**
         - cmake-*/**
         - vendor/**
 actions:

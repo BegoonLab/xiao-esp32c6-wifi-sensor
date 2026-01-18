@@ -28,7 +28,7 @@ TaskHandle_t send_data_task_handle = NULL;
 
 static i2c_master_dev_handle_t sgp41_i2c_handle;
 
-const float sampling_interval = 10.f;
+const float sampling_interval = 10.F;
 int32_t send_data_after = CONFIG_WAKEUP_TIME_SEC + 60;
 volatile bool can_go_sleep = true;
 
@@ -88,7 +88,7 @@ void read_sgp() {
   }
 
   while (1) {
-    send_data_after -= sampling_interval;
+    send_data_after -= (int32_t)sampling_interval;
 
     if (send_data_after < 0 && can_go_sleep == true) {
       can_go_sleep = false;
@@ -166,7 +166,8 @@ void sensirion_i2c_hal_init(void) {
 
 void sensirion_i2c_hal_free(void) { release_i2c_device(sgp41_i2c_handle); }
 
-int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t *data, uint16_t count) {
+int8_t sensirion_i2c_hal_read(uint8_t address __attribute__((unused)),
+                              uint8_t *data, uint16_t count) {
   esp_err_t err = ESP_FAIL;
   static uint8_t attempt = 0;
   do {
@@ -179,8 +180,8 @@ int8_t sensirion_i2c_hal_read(uint8_t address, uint8_t *data, uint16_t count) {
   return (int8_t)err;
 }
 
-int8_t sensirion_i2c_hal_write(uint8_t address, const uint8_t *data,
-                               uint16_t count) {
+int8_t sensirion_i2c_hal_write(uint8_t address __attribute__((unused)),
+                               const uint8_t *data, uint16_t count) {
   esp_err_t err = ESP_FAIL;
   static uint8_t attempt = 0;
 
@@ -208,7 +209,7 @@ void sensirion_i2c_hal_sleep_usec(uint32_t useconds) {
 }
 
 // Task to handle data sending
-void send_data_task(void *pvParameters) {
+void send_data_task(void *pvParameters __attribute__((unused))) {
   uint32_t notification = 0;
   while (1) {
     // Wait indefinitely for a notification to send data

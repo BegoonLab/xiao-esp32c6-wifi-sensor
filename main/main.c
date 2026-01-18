@@ -75,7 +75,7 @@ void app_main(void) {
 
 #ifdef CONFIG_SENSOR_SGP41
   init_sgp();
-  read_sgp(&sensor_data);
+  read_sgp();
   deinit_sgp();
 #endif
 

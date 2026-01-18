@@ -24,7 +24,8 @@ void go_sleep(void) {
   }
 
   ESP_LOGI(TAG, "Enabling timer wakeup, %ds", wakeup_time_sec);
-  ESP_ERROR_CHECK(esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000));
+  ESP_ERROR_CHECK(
+      esp_sleep_enable_timer_wakeup((uint64_t)wakeup_time_sec * 1000000));
 
   // Enter deep sleep
   esp_deep_sleep_start();

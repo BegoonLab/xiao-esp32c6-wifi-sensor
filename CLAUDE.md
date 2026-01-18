@@ -49,7 +49,7 @@ Ignored paths: `managed_components/`, `build/`, `cmake-*/`, `vendor/`
 
 The firmware supports two connectivity modes, selected at compile time via `idf.py menuconfig` under "XIAO Sensor Configuration" → "Select Sensor Connection Type":
 
-1. **Wi-Fi/MQTT** (`CONFIG_SENSOR_CONNECTION_WIFI`): Wakes from deep sleep, connects to WiFi, publishes sensor data to MQTT broker, returns to deep sleep
+1. **Wi-Fi/MQTT** (`CONFIG_SENSOR_CONNECTION_WIFI_MQTT`): Wakes from deep sleep, connects to WiFi, publishes sensor data to MQTT broker, returns to deep sleep
 2. **ZigBee** (`CONFIG_SENSOR_CONNECTION_ZIGBEE`): Long-running ZigBee end device (note: SGP41 not supported in ZigBee mode due to protocol limitations)
 
 ### Main Source Files (`main/`)

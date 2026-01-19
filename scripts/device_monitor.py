@@ -37,7 +37,15 @@ def send_notification(title, message):
             # Try terminal-notifier first (brew install terminal-notifier)
             try:
                 subprocess.run(
-                    ["terminal-notifier", "-title", title, "-message", message, "-sound", "default"],
+                    [
+                        "terminal-notifier",
+                        "-title",
+                        title,
+                        "-message",
+                        message,
+                        "-sound",
+                        "default",
+                    ],
                     check=True,
                     capture_output=True,
                 )
@@ -93,11 +101,17 @@ def monitor_device():
     if system == "Darwin":
         # Check if terminal-notifier is available
         try:
-            subprocess.run(["which", "terminal-notifier"], check=True, capture_output=True)
+            subprocess.run(
+                ["which", "terminal-notifier"], check=True, capture_output=True
+            )
             print(f"[{timestamp()}] Notifications: using terminal-notifier")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            print(f"[{timestamp()}] Notifications: using osascript (install terminal-notifier for better notifications: brew install terminal-notifier)")
-            print(f"[{timestamp()}] Tip: Check System Settings → Notifications → Script Editor if notifications don't appear")
+            print(
+                f"[{timestamp()}] Notifications: using osascript (install terminal-notifier for better notifications: brew install terminal-notifier)"
+            )
+            print(
+                f"[{timestamp()}] Tip: Check System Settings → Notifications → Script Editor if notifications don't appear"
+            )
 
     # Track connected devices and their connection times
     connected_devices = {}  # device -> connection_timestamp
@@ -105,7 +119,9 @@ def monitor_device():
     # Check for already connected devices at startup
     initial_devices = find_devices()
     if initial_devices:
-        print(f"[{timestamp()}] Found {len(initial_devices)} device(s) already connected:")
+        print(
+            f"[{timestamp()}] Found {len(initial_devices)} device(s) already connected:"
+        )
         for device in initial_devices:
             connected_devices[device] = time.time()
             print(f"  - {device}")
@@ -129,7 +145,9 @@ def monitor_device():
             connection_time = connected_devices.pop(device)
             duration = time.time() - connection_time
             msg = f"{device} disconnected"
-            print(f"[{timestamp()}] ✗ {msg} (was connected for {format_duration(duration)}, remaining: {len(connected_devices)})")
+            print(
+                f"[{timestamp()}] ✗ {msg} (was connected for {format_duration(duration)}, remaining: {len(connected_devices)})"
+            )
             send_notification("Device Disconnected", msg)
 
         time.sleep(CHECK_INTERVAL)

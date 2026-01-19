@@ -18,6 +18,18 @@ menu "XIAO Sensor Configuration"
                 Enable ZigBee connection.
 
     endchoice
+
+    config SENSOR_ID
+        string "Sensor ID"
+        default ""
+        help
+            Unique identifier for the sensor.
+
+            If left empty, the device's MAC address will be used as the Sensor ID.
+
+            This ID is used to construct MQTT topics for publishing data (WiFi mode)
+            or identify the device in the ZigBee network.
+
     menu "Wi-Fi Configuration"
         depends on SENSOR_CONNECTION_WIFI_MQTT
         config ESP_WIFI_SSID
@@ -104,21 +116,6 @@ menu "XIAO Sensor Configuration"
             help
                 MQTT topic for publishing sensor data.
 
-        config SENSOR_ID
-            string "Sensor ID"
-            default ""
-            help
-                Unique identifier for the sensor.
-
-                If left empty, the device's MAC address will be used as the Sensor ID.
-
-                This ID is used to construct MQTT topics for publishing data.
-
-                **Example:**
-                If `MQTT_TOPIC` is set to "xiao/sensor" and `SENSOR_ID` is empty,
-                the resulting MQTT topic for data will be:
-                `xiao/sensor/<MAC_ADDRESS>/data`
-
         choice MQTT_QOS
              prompt "MQTT Quality of Service"
              default MQTT_QOS_2
@@ -180,13 +177,6 @@ menu "XIAO Sensor Configuration"
 
     menu "ZigBee Configuration"
         depends on SENSOR_CONNECTION_ZIGBEE
-        config SENSOR_ID
-            string "Sensor ID"
-            default ""
-            help
-                Unique identifier for the sensor.
-
-                If left empty, the device's MAC address will be used as the Sensor ID.
         config ZIGBEE_ANTENNA_EXTERNAL
             bool "External Antenna"
             help

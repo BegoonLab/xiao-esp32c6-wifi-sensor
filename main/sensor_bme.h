@@ -32,7 +32,6 @@ void init_bme(void);
 void deinit_bme(void);
 void read_bme(SensorData *sensor_data);
 void convert_values(double *temperature, double *humidity, double *pressure);
-void bme280_init_after_sleep();
 
 int8_t bme280_get_temperature(double *temperature);
 int8_t bme280_get_humidity(double *humidity);

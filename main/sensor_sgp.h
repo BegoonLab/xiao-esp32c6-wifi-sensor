@@ -39,7 +39,7 @@
 
 void init_sgp(void);
 
-void read_sgp();
+void read_sgp(void);
 
 void deinit_sgp(void);
 

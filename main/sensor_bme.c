@@ -12,8 +12,7 @@
 
 #include "sensor_bme.h"
 
-#define HIGH 1
-#define LOW 0
+enum { LOW = 0, HIGH = 1 };
 
 #ifdef CONFIG_SENSOR_BME680
 static const char *TAG = "sensor_bme680";
@@ -37,9 +36,8 @@ static struct bme280_dev dev;
 static struct bme280_settings settings;
 
 static i2c_master_dev_handle_t bme280_i2c_handle;
-#endif
 
-void bme280_init_after_sleep() {
+static void bme280_init_after_sleep(void) {
   int8_t rslt = bme280_init(&dev);
   bme280_error_codes_print_result("bme280_init", rslt);
 
@@ -61,6 +59,7 @@ void bme280_init_after_sleep() {
   rslt = bme280_set_sensor_settings(BME280_SEL_ALL_SETTINGS, &settings, &dev);
   bme280_error_codes_print_result("bme280_set_sensor_settings", rslt);
 }
+#endif
 
 void init_bme(void) {
 
@@ -342,7 +341,8 @@ int8_t bme280_get_pressure(double *pressure) {
 }
 
 BME280_INTF_RET_TYPE bme280_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
-                                     uint32_t length, void *intf_ptr) {
+                                     uint32_t length,
+                                     void *intf_ptr __attribute__((unused))) {
   esp_err_t err = ESP_FAIL;
 
   if (reg_addr) {
@@ -358,7 +358,8 @@ BME280_INTF_RET_TYPE bme280_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
 }
 
 BME280_INTF_RET_TYPE bme280_i2c_write(uint8_t reg_addr, const uint8_t *reg_data,
-                                      uint32_t length, void *intf_ptr) {
+                                      uint32_t length,
+                                      void *intf_ptr __attribute__((unused))) {
   esp_err_t err = ESP_FAIL;
 
   if (reg_addr) {
@@ -382,7 +383,8 @@ BME280_INTF_RET_TYPE bme280_i2c_write(uint8_t reg_addr, const uint8_t *reg_data,
   return (BME280_INTF_RET_TYPE)err;
 }
 
-void bme280_delay_us(uint32_t period_us, void *intf_ptr) {
+void bme280_delay_us(uint32_t period_us,
+                     void *intf_ptr __attribute__((unused))) {
   uint32_t msec = period_us / 1000;
   if (period_us % 1000 > 0) {
     msec++;
@@ -393,7 +395,8 @@ void bme280_delay_us(uint32_t period_us, void *intf_ptr) {
 
 #ifdef CONFIG_SENSOR_BME680
 BME68X_INTF_RET_TYPE bme68x_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
-                                     uint32_t len, void *intf_ptr) {
+                                     uint32_t len,
+                                     void *intf_ptr __attribute__((unused))) {
   esp_err_t err = ESP_FAIL;
 
   if (reg_addr) {
@@ -409,7 +412,8 @@ BME68X_INTF_RET_TYPE bme68x_i2c_read(uint8_t reg_addr, uint8_t *reg_data,
 }
 
 BME68X_INTF_RET_TYPE bme68x_i2c_write(uint8_t reg_addr, const uint8_t *reg_data,
-                                      uint32_t len, void *intf_ptr) {
+                                      uint32_t len,
+                                      void *intf_ptr __attribute__((unused))) {
   esp_err_t err = ESP_FAIL;
 
   if (reg_addr) {
@@ -472,7 +476,8 @@ void bme68x_error_codes_print_result(const char api_name[], int8_t rslt) {
   }
 }
 
-void bme68x_delay_us(uint32_t period_us, void *intf_ptr) {
+void bme68x_delay_us(uint32_t period_us,
+                     void *intf_ptr __attribute__((unused))) {
   uint32_t msec = period_us / 1000;
   if (period_us % 1000 > 0) {
     msec++;

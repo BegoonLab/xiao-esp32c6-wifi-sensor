@@ -8,7 +8,7 @@ This is a power-efficient IoT environmental sensor built on the XIAO ESP32C6 mic
 
 ## Build Commands
 
-This project uses ESP-IDF v5.5.1 with CMake. You must have ESP-IDF installed locally.
+This project uses ESP-IDF v5.5.2 with CMake. You must have ESP-IDF installed locally.
 
 ```bash
 # Clone with submodules
@@ -54,22 +54,22 @@ The firmware supports two connectivity modes, selected at compile time via `idf.
 
 ### Main Source Files (`main/`)
 
-| File | Purpose |
-|------|---------|
-| `main.c` | Application entry point, orchestrates initialization and main loop based on connectivity mode |
-| `sensor_data.h/c` | Unified sensor data structure with mutex-protected access |
-| `sensor_bme.h/c` | BME280/BME680 I2C driver for temperature/humidity/pressure |
-| `sensor_sgp.h/c` | SGP41 VOC/NOx sensor driver |
-| `sensor_adc.h/c` | Battery voltage monitoring via ADC |
-| `sensor_mqtt.h/c` | MQTT client for WiFi mode |
-| `sensor_wifi.h/c` | WiFi connection management |
-| `sensor_zb.h/c` | ZigBee protocol implementation |
-| `sensor_sleep.h/c` | Deep sleep power management |
-| `sensor_nvs.h/c` | Non-volatile storage for persistent data |
+| File               | Purpose                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `main.c`           | Application entry point, orchestrates initialization and main loop based on connectivity mode |
+| `sensor_data.h/c`  | Unified sensor data structure with mutex-protected access                                     |
+| `sensor_bme.h/c`   | BME280/BME680 I2C driver for temperature/humidity/pressure                                    |
+| `sensor_sgp.h/c`   | SGP41 VOC/NOx sensor driver                                                                   |
+| `sensor_adc.h/c`   | Battery voltage monitoring via ADC                                                            |
+| `sensor_mqtt.h/c`  | MQTT client for WiFi mode                                                                     |
+| `sensor_wifi.h/c`  | WiFi connection management                                                                    |
+| `sensor_zb.h/c`    | ZigBee protocol implementation                                                                |
+| `sensor_sleep.h/c` | Deep sleep power management                                                                   |
+| `sensor_nvs.h/c`   | Non-volatile storage for persistent data                                                      |
 
 ### Initialization Flow
 
-```
+```text
 app_main() → init_nvs() → init_gpio() → init_led() → init_i2c()
     ↓
 [Based on CONFIG_SENSOR_CONNECTION_*]

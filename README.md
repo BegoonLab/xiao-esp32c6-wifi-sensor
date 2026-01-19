@@ -92,8 +92,8 @@ _Voltage divider schematic (if battery voltage monitoring is required)._
 
 ## Configuration
 
-This build was developed and tested with [ESP-IDF v5.5.1](https://github.com/espressif/esp-idf/releases/tag/v5.5.1)
-Follow [this instruction](https://docs.espressif.com/projects/esp-idf/en/v5.5.1/esp32/get-started/index.html#manual-installation) to install it. It is required.
+This build was developed and tested with [ESP-IDF v5.5.2](https://github.com/espressif/esp-idf/releases/tag/v5.5.2)
+Follow [this instruction](https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32/get-started/index.html#manual-installation) to install it. It is required.
 
 Configure the sensor using the following steps:
 
@@ -301,13 +301,13 @@ Follow these steps to set up your Smart IoT Sensor:
 
 ### Dependencies
 
-- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.5.1/esp32/get-started/index.html#software) for Espressif chips.
+- **ESP-IDF**: [Official development framework](https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32/get-started/index.html#software) for Espressif chips.
 
 ### Building the Firmware
 
 1. **Install ESP-IDF**
 
-   Follow the [ESP-IDF Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/v5.5.1/esp32/get-started/index.html) to set up the development environment.
+   Follow the [ESP-IDF Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32/get-started/index.html) to set up the development environment.
 
 2. **Configure the Project**
 

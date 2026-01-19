@@ -119,8 +119,10 @@ void stop_mqtt() {
   }
 }
 
-void mqtt_event_handler(void *handler_args, esp_event_base_t base,
-                        int32_t event_id, void *event_data) {
+void mqtt_event_handler(void *handler_args __attribute__((unused)),
+                        esp_event_base_t base __attribute__((unused)),
+                        int32_t event_id,
+                        void *event_data __attribute__((unused))) {
   switch (event_id) {
   case MQTT_EVENT_CONNECTED:
     ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -174,8 +176,8 @@ void mqtt_prepare_json(char *json_string, int rssi,
 
   cJSON_AddNumberToObject(
       json, "connection_duration_ms",
-      (end_to_connect.tv_sec - start_to_connect.tv_sec) * 1000 +
-          (end_to_connect.tv_usec - start_to_connect.tv_usec) / 1000);
+      (double)(end_to_connect.tv_sec - start_to_connect.tv_sec) * 1000.0 +
+          (double)(end_to_connect.tv_usec - start_to_connect.tv_usec) / 1000.0);
 
   // Convert cJSON to string
   if (!cJSON_PrintPreallocated(json, json_string, MQTT_MSG_MAX_LEN, false)) {

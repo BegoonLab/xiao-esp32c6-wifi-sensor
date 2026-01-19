@@ -48,8 +48,8 @@ void init_led(void) {
 }
 
 // Task to handle different LED effects
-void led_effect_task(void *pvParameters) {
-  led_effect_t current_effect;
+void led_effect_task(void *pvParameters __attribute__((unused))) {
+  led_effect_t current_effect = LED_EFFECT_BREATH;
 
   while (1) {
     // Wait for an effect to be queued

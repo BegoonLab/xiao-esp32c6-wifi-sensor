@@ -11,8 +11,8 @@
  */
 
 #include "sensor_gpio.h"
-#define LOW 0
-#define HIGH 1
+
+enum { LOW = 0, HIGH = 1 };
 
 void init_gpio(void) {
 #if defined(CONFIG_WIFI_ANTENNA_EXTERNAL) ||                                   \

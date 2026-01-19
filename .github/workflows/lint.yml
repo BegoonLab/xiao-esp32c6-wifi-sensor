@@ -22,16 +22,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: "recursive"
+          submodules: recursive
 
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.5.1
+          esp_idf_version: v5.5.2
           target: esp32c6
 
-      - name: Symlink compile_commands.json
-        run: ln -s build/compile_commands.json compile_commands.json
+      - name: Fix compile_commands.json paths
+        run: |
+          # Replace Docker container paths with relative paths for trunk linter
+          sed -i 's|/project/|./|g' build/compile_commands.json
+          ln -s build/compile_commands.json compile_commands.json
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1

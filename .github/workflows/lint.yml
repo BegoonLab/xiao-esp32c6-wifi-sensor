@@ -34,11 +34,6 @@ jobs:
             ln -s build/compile_commands.json compile_commands.json
             curl -fsSL https://trunk.io/releases/trunk -o /tmp/trunk-install.sh
             bash /tmp/trunk-install.sh
-            echo "=== Debug info ==="
-            pwd
-            ls -la /root/.cache/trunk/cli/
-            git status
+            git fetch origin main
             TRUNK_BIN=$(find /root/.cache/trunk/cli -name trunk -type f | head -1)
-            echo "Using trunk at: $TRUNK_BIN"
-            echo "=== Running trunk ==="
             $TRUNK_BIN check --ci --upstream origin/main

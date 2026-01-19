@@ -30,8 +30,19 @@ jobs:
           esp_idf_version: v5.5.2
           target: esp32c6
           command: |
+            set -x
             idf.py build
             ln -s build/compile_commands.json compile_commands.json
+            echo "=== Installing Trunk ==="
             curl -fsSL https://trunk.io/releases/trunk -o /tmp/trunk-install.sh
-            bash /tmp/trunk-install.sh -y
-            ~/.local/bin/trunk check --ci --upstream origin/main
+            cat /tmp/trunk-install.sh | head -50
+            echo "=== Running installer ==="
+            bash /tmp/trunk-install.sh --help || true
+            bash /tmp/trunk-install.sh
+            echo "=== Finding trunk binary ==="
+            find /root -name trunk -type f 2>/dev/null || true
+            find /home -name trunk -type f 2>/dev/null || true
+            which trunk || true
+            ls -la ~/.local/bin/ || true
+            echo "=== Running trunk check ==="
+            trunk check --ci --upstream origin/main || ~/.local/bin/trunk check --ci --upstream origin/main

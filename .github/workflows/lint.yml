@@ -36,5 +36,25 @@ jobs:
           # Copy first since build/ has restricted permissions from Docker
           sed "s|/project|${GITHUB_WORKSPACE}|g" build/compile_commands.json > compile_commands.json
 
+      - name: Debug compile_commands.json
+        run: |
+          echo "=== GITHUB_WORKSPACE ==="
+          echo "${GITHUB_WORKSPACE}"
+          echo ""
+          echo "=== Current directory ==="
+          pwd
+          echo ""
+          echo "=== Files in main/ ==="
+          ls -la main/
+          echo ""
+          echo "=== compile_commands.json location ==="
+          ls -la compile_commands.json
+          echo ""
+          echo "=== Sample entry from compile_commands.json (first main.c entry) ==="
+          grep -A5 '"file".*main/main.c"' compile_commands.json | head -20
+          echo ""
+          echo "=== All file entries from compile_commands.json ==="
+          grep '"file"' compile_commands.json | head -20
+
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1

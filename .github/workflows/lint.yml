@@ -33,8 +33,8 @@ jobs:
       - name: Fix compile_commands.json paths
         run: |
           # Replace Docker container paths with relative paths for trunk linter
-          sed -i 's|/project/|./|g' build/compile_commands.json
-          ln -s build/compile_commands.json compile_commands.json
+          # Copy first since build/ has restricted permissions from Docker
+          sed 's|/project/|./|g' build/compile_commands.json > compile_commands.json
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
